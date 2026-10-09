@@ -1,66 +1,332 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+<div align="center">
+  <img src="https://img.icons8.com/color/96/000000/laravel.png" alt="Laravel Logo" width="96" height="96" />
+  <h1>🌱 SystemSeed</h1>
+  <p><strong>A Modern Laravel Application with Full Stack Technologies</strong></p>
+  
+  [![Laravel Version](https://img.shields.io/badge/Laravel-11.31-red?style=for-the-badge&logo=laravel)](https://laravel.com)
+  [![PHP Version](https://img.shields.io/badge/PHP-8.2+-777BB4?style=for-the-badge&logo=php)](https://php.net)
+  [![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
+</div>
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+---
 
-## About Laravel
+## 🎯 About SystemSeed
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+SystemSeed is a modern full-stack Laravel application built with cutting-edge technologies for building scalable, efficient web applications. It combines powerful backend frameworks with modern frontend tools for a seamless development experience.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+---
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## 🏗️ Architecture & Tech Stack
 
-## Learning Laravel
+### 🔵 Backend
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <img src="https://img.icons8.com/color/64/000000/laravel.png" alt="Laravel" width="48" height="48" />
+      <br />
+      <strong>Laravel 11.31</strong>
+    </td>
+    <td align="center" width="50%">
+      <img src="https://img.icons8.com/color/64/000000/php.png" alt="PHP" width="48" height="48" />
+      <br />
+      <strong>PHP 8.2+</strong>
+    </td>
+  </tr>
+  <tr>
+    <td><strong>Description:</strong> Powerful, elegant PHP framework for web applications</td>
+    <td><strong>Description:</strong> Modern programming language with improved performance</td>
+  </tr>
+</table>
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+#### Backend Features:
+- ⚡ **Fast Routing** - Simple and fast routing engine
+- 💉 **Dependency Injection** - Powerful IoC container
+- 🗄️ **Eloquent ORM** - Expressive database abstraction
+- 🔐 **Authentication** - Built-in Laravel Sanctum for API security
+- 👥 **Social Login** - Laravel Socialite integration
+- 🔍 **REPL** - Laravel Tinker for interactive debugging
+- 📦 **Queue System** - Background job processing
+- 🧪 **Testing** - PHPUnit integration with Pest support
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+---
 
-## Laravel Sponsors
+### 🎨 Frontend
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <img src="https://img.icons8.com/color/64/000000/tailwindcss.png" alt="Tailwind CSS" width="48" height="48" />
+      <br />
+      <strong>Tailwind CSS 3.4</strong>
+    </td>
+    <td align="center" width="50%">
+      <img src="https://img.icons8.com/color/64/000000/javascript.png" alt="JavaScript" width="48" height="48" />
+      <br />
+      <strong>Vite</strong>
+    </td>
+  </tr>
+  <tr>
+    <td><strong>Description:</strong> Utility-first CSS framework for rapid UI development</td>
+    <td><strong>Description:</strong> Next generation frontend build tool</td>
+  </tr>
+</table>
 
-### Premium Partners
+#### Frontend Tools:
+- 🎯 **Tailwind CSS** - Utility-first CSS framework
+- 🚀 **Vite** - Lightning-fast build tool
+- 📡 **Axios** - HTTP client for API requests
+- 🔄 **PostCSS** - CSS transformations
+- 🤖 **Autoprefixer** - Automatic vendor prefixes
+- ⚙️ **Laravel Vite Plugin** - Seamless integration
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+---
 
-## Contributing
+### 🛠️ Development Tools
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+<table>
+  <tr>
+    <td align="center" width="33%">
+      <img src="https://img.icons8.com/color/64/000000/docker.png" alt="Docker" width="48" height="48" />
+      <br />
+      <strong>Docker</strong>
+    </td>
+    <td align="center" width="33%">
+      <img src="https://img.icons8.com/color/64/000000/database.png" alt="Database" width="48" height="48" />
+      <br />
+      <strong>Database</strong>
+    </td>
+    <td align="center" width="33%">
+      <img src="https://img.icons8.com/color/64/000000/test-passed.png" alt="Testing" width="48" height="48" />
+      <br />
+      <strong>Testing</strong>
+    </td>
+  </tr>
+</table>
 
-## Code of Conduct
+- 🐳 **Laravel Sail** - Docker development environment
+- 📊 **Database Migrations** - Schema versioning & management
+- 🧪 **PHPUnit 11** - Unit & feature testing
+- 🎭 **Mockery** - Mocking library for testing
+- 🚨 **Collision** - Beautiful error handling
+- ✨ **Pint** - Laravel code style fixer
+- 📋 **Pail** - Real-time log monitoring
+- 🔮 **Faker** - Generate fake data for testing
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+---
 
-## Security Vulnerabilities
+## 📦 Dependencies
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### Production
+```json
+{
+  "php": "^8.2",
+  "laravel/framework": "^11.31",
+  "laravel/sanctum": "^4.3",
+  "laravel/socialite": "^5.31",
+  "laravel/tinker": "^2.9"
+}
+```
 
-## License
+### Development
+```json
+{
+  "fakerphp/faker": "^1.23",
+  "laravel/pail": "^1.1",
+  "laravel/pint": "^1.13",
+  "laravel/sail": "^1.26",
+  "mockery/mockery": "^1.6",
+  "nunomaduro/collision": "^8.1",
+  "phpunit/phpunit": "^11.0.1"
+}
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+---
+
+## 🚀 Quick Start
+
+### Prerequisites
+- PHP 8.2 or higher
+- Composer
+- Node.js & npm
+- Docker (optional, for Laravel Sail)
+
+### Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/heinerapaza19/systemseed.git
+   cd systemseed
+   ```
+
+2. **Install PHP dependencies**
+   ```bash
+   composer install
+   ```
+
+3. **Install Node dependencies**
+   ```bash
+   npm install
+   ```
+
+4. **Setup environment**
+   ```bash
+   cp .env.example .env
+   php artisan key:generate
+   ```
+
+5. **Database setup**
+   ```bash
+   php artisan migrate
+   ```
+
+6. **Development mode**
+   ```bash
+   composer run dev
+   ```
+   This starts:
+   - 🖥️ Laravel development server
+   - 📦 Queue listener
+   - 📋 Real-time logs
+   - 🎨 Frontend build watcher
+
+---
+
+## 📖 Available Commands
+
+### Backend Commands
+```bash
+php artisan serve              # Start development server
+php artisan migrate            # Run database migrations
+php artisan tinker             # Interactive shell
+php artisan queue:listen       # Listen to queued jobs
+php artisan pail               # Monitor logs in real-time
+```
+
+### Frontend Commands
+```bash
+npm run dev                    # Start Vite dev server
+npm run build                  # Build for production
+```
+
+### Combined Development
+```bash
+composer run dev               # Run everything concurrently
+```
+
+---
+
+## 🏛️ Project Structure
+
+```
+systemseed/
+├── app/                       # Application logic
+│   ├── Http/                  # Controllers & middleware
+│   ├── Models/                # Eloquent models
+│   └── Services/              # Business logic
+├── database/                  # Database files
+│   ├── migrations/            # Schema migrations
+│   ├── seeders/               # Data seeders
+│   └── factories/             # Model factories for testing
+├── resources/                 # Frontend assets
+│   ├── css/                   # Tailwind CSS styles
+│   ├── js/                    # JavaScript files
+│   └── views/                 # Blade templates
+├── routes/                    # Application routes
+├── tests/                     # Test suites
+├── storage/                   # Logs & uploads
+└── config/                    # Configuration files
+```
+
+---
+
+## 🔐 Key Features
+
+### Authentication & Authorization
+- 🔒 **Laravel Sanctum** - API token authentication
+- 👤 **Social Login** - OAuth integration via Socialite
+- 🛡️ **Authorization** - Built-in authorization system
+
+### Database
+- 🗄️ **Eloquent ORM** - Expressive database queries
+- 📝 **Migrations** - Version control for database schema
+- 🌱 **Seeders** - Database population for development
+- 🏭 **Factories** - Generate model instances for testing
+
+### Testing
+- ✅ **PHPUnit** - Unit and feature tests
+- 🎭 **Mockery** - Mock objects for testing
+- 🔮 **Faker** - Generate realistic test data
+
+### Development Experience
+- ⚡ **Tinker REPL** - Interactive code evaluation
+- 🚨 **Collision** - Enhanced error pages
+- 📋 **Pail** - Real-time log streaming
+- 🎨 **Pint** - Automatic code formatting
+
+---
+
+## 🔄 Development Workflow
+
+### Start Development
+```bash
+composer run dev
+```
+
+This command runs concurrently:
+- 🖥️ `php artisan serve` - Laravel server (port 8000)
+- 📦 `php artisan queue:listen --tries=1` - Queue processor
+- 📋 `php artisan pail --timeout=0` - Log monitor
+- 🎨 `npm run dev` - Vite build watcher
+
+### Run Tests
+```bash
+php artisan test
+```
+
+### Format Code
+```bash
+php artisan pint
+```
+
+---
+
+## 📚 Documentation
+
+- [Laravel Documentation](https://laravel.com/docs)
+- [Tailwind CSS Docs](https://tailwindcss.com/docs)
+- [Vite Guide](https://vitejs.dev)
+- [Sanctum Auth](https://laravel.com/docs/sanctum)
+- [Socialite OAuth](https://laravel.com/docs/socialite)
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+---
+
+## 📄 License
+
+This project is open-sourced software licensed under the [MIT license](LICENSE).
+
+---
+
+## ✨ Author
+
+**Heinera Paza**  
+GitHub: [@heinerapaza19](https://github.com/heinerapaza19)
+
+---
+
+<div align="center">
+  <p><strong>Built with ❤️ using Laravel & Modern Web Technologies</strong></p>
+  <p>⭐ If you find this useful, please consider giving it a star!</p>
+</div>
