@@ -1,0 +1,901 @@
+{
+  "info": {
+    "_postman_id": "9bd19806-3a77-4f7c-8b50-systemseed-api",
+    "name": "SystemSeed - Portafolio API",
+    "description": "Colección ejecutable para probar la API REST de SystemSeed. Ejecutar con el Collection Runner en el orden definido. Requiere `php artisan serve` y los seeders aplicados. Google OAuth se verifica sin seguir la redirección externa; el login real requiere interacción manual y credenciales de Google.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://127.0.0.1:8000", "type": "string" },
+    { "key": "admin_email", "value": "heinerapaza@gmail.com", "type": "string" },
+    { "key": "admin_password", "value": "apaza", "type": "string" },
+    { "key": "user_email", "value": "usuario@gmail.com", "type": "string" },
+    { "key": "user_password", "value": "usuario", "type": "string" },
+    { "key": "run_id", "value": "", "type": "string" },
+    { "key": "admin_token", "value": "", "type": "string" },
+    { "key": "user_token", "value": "", "type": "string" },
+    { "key": "registered_token", "value": "", "type": "string" },
+    { "key": "laravel_id", "value": "", "type": "string" },
+    { "key": "technology_id", "value": "", "type": "string" },
+    { "key": "project_id", "value": "", "type": "string" },
+    { "key": "project_slug", "value": "", "type": "string" },
+    { "key": "duplicate_project_id", "value": "", "type": "string" },
+    { "key": "draft_project_id", "value": "", "type": "string" },
+    { "key": "draft_project_slug", "value": "", "type": "string" },
+    { "key": "image_id", "value": "", "type": "string" },
+    { "key": "managed_user_id", "value": "", "type": "string" },
+    { "key": "favorite_project_id", "value": "", "type": "string" },
+    { "key": "message_id", "value": "", "type": "string" },
+    { "key": "experience_id", "value": "", "type": "string" },
+    { "key": "education_id", "value": "", "type": "string" },
+    { "key": "skill_id", "value": "", "type": "string" },
+    { "key": "certificate_id", "value": "", "type": "string" },
+    { "key": "original_profile_json", "value": "", "type": "string" },
+    { "key": "cv_file_path", "value": "", "type": "string" },
+    { "key": "certificate_file_path", "value": "", "type": "string" },
+    { "key": "allow_cv_delete", "value": "false", "type": "string" },
+    { "key": "public_demo_project_id", "value": "", "type": "string" },
+    { "key": "private_demo_project_id", "value": "", "type": "string" },
+    { "key": "template_project_id", "value": "", "type": "string" },
+    { "key": "project_update_id", "value": "", "type": "string" },
+    { "key": "security_user_id", "value": "", "type": "string" },
+    { "key": "security_token", "value": "", "type": "string" },
+    { "key": "security_email", "value": "", "type": "string" },
+    { "key": "password_reset_token", "value": "", "type": "string" },
+    { "key": "verification_url", "value": "", "type": "string" },
+    { "key": "run_rate_limit_test", "value": "false", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "00 - Estado y preparar ejecución",
+      "item": [
+        {
+          "name": "Estado de la API",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('run_id', Date.now().toString());",
+                  "['admin_token','user_token','registered_token','technology_id','project_id','project_slug','duplicate_project_id','draft_project_id','draft_project_slug','image_id','managed_user_id','favorite_project_id','message_id','experience_id','education_id','skill_id','certificate_id','original_profile_json','public_demo_project_id','private_demo_project_id','template_project_id','project_update_id','security_user_id','security_token','security_email','password_reset_token','verification_url'].forEach(key => pm.collectionVariables.set(key, ''));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('API disponible', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Respuesta de SystemSeed v1', () => { pm.expect(json.status).to.eql('ok'); pm.expect(json.project).to.eql('SystemSeed'); pm.expect(json.version).to.eql('v1'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": "{{base_url}}/api/v1/status"
+          }
+        }
+      ]
+    },
+    {
+      "name": "01 - Autenticación",
+      "item": [
+        {
+          "name": "Registrar usuario temporal",
+          "event": [{
+            "listen": "test",
+            "script": {
+              "type": "text/javascript",
+              "exec": [
+                "pm.test('Usuario registrado', () => pm.response.to.have.status(201));",
+                "const json = pm.response.json();",
+                "pm.test('Rol user y token Bearer', () => { pm.expect(json.success).to.eql(true); pm.expect(json.user.role).to.eql('user'); pm.expect(json.token_type).to.eql('Bearer'); });",
+                "pm.collectionVariables.set('registered_token', json.token);"
+              ]
+            }
+          }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Usuario Postman {{run_id}}\",\n  \"email\": \"postman.{{run_id}}@systemseed.local\",\n  \"password\": \"password123\",\n  \"password_confirmation\": \"password123\"\n}" },
+            "url": "{{base_url}}/api/v1/auth/register"
+          }
+        },
+        {
+          "name": "Login - Administrador",
+          "event": [{
+            "listen": "test",
+            "script": {
+              "type": "text/javascript",
+              "exec": [
+                "pm.test('Login admin correcto', () => pm.response.to.have.status(200));",
+                "const json = pm.response.json();",
+                "pm.test('El usuario es admin', () => pm.expect(json.user.role).to.eql('admin'));",
+                "pm.collectionVariables.set('admin_token', json.token);"
+              ]
+            }
+          }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{admin_email}}\",\n  \"password\": \"{{admin_password}}\"\n}" },
+            "url": "{{base_url}}/api/v1/auth/login"
+          }
+        },
+        {
+          "name": "Login - Usuario",
+          "event": [{
+            "listen": "test",
+            "script": {
+              "type": "text/javascript",
+              "exec": [
+                "pm.test('Login user correcto', () => pm.response.to.have.status(200));",
+                "const json = pm.response.json();",
+                "pm.test('El usuario tiene rol user', () => pm.expect(json.user.role).to.eql('user'));",
+                "pm.collectionVariables.set('user_token', json.token);"
+              ]
+            }
+          }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{user_email}}\",\n  \"password\": \"{{user_password}}\"\n}" },
+            "url": "{{base_url}}/api/v1/auth/login"
+          }
+        },
+        {
+          "name": "Perfil del administrador",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Perfil autenticado', () => pm.response.to.have.status(200));", "pm.test('Perfil admin', () => pm.expect(pm.response.json().user.role).to.eql('admin'));"] } }],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }] },
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": "{{base_url}}/api/v1/auth/me"
+          }
+        },
+        {
+          "name": "Dashboard administrador",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Admin accede al dashboard', () => pm.response.to.have.status(200));", "pm.test('Mensaje correcto', () => pm.expect(pm.response.json().message).to.eql('Panel administrador'));"] } }],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }] },
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": "{{base_url}}/api/v1/admin/dashboard"
+          }
+        },
+        {
+          "name": "Dashboard usuario",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('User accede a su dashboard', () => pm.response.to.have.status(200));", "pm.test('Mensaje correcto', () => pm.expect(pm.response.json().message).to.eql('Panel usuario'));"] } }],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{user_token}}", "type": "string" }] },
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": "{{base_url}}/api/v1/user/dashboard"
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 - API pública",
+      "item": [
+        {
+          "name": "Listar tecnologías",
+          "event": [{
+            "listen": "test",
+            "script": {
+              "type": "text/javascript",
+              "exec": [
+                "pm.test('Tecnologías disponibles', () => pm.response.to.have.status(200));",
+                "const responseData = pm.response.json().data;",
+                "pm.test('Lista no vacía y ordenada', () => { pm.expect(responseData.length).to.be.above(0); const names = responseData.map(item => item.name); pm.expect(names).to.eql([...names].sort((a,b) => a.localeCompare(b))); });",
+                "const laravel = responseData.find(item => item.slug === 'laravel');",
+                "pm.test('Seeder Laravel disponible', () => pm.expect(laravel).to.exist);",
+                "pm.collectionVariables.set('laravel_id', laravel.id);"
+              ]
+            }
+          }],
+          "request": { "method": "GET", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{base_url}}/api/v1/technologies" }
+        },
+        {
+          "name": "Listar proyectos publicados",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Listado paginado correcto', () => pm.response.to.have.status(200));", "const json = pm.response.json();", "pm.test('Incluye data, links y meta', () => { pm.expect(json).to.have.property('data'); pm.expect(json).to.have.property('links'); pm.expect(json).to.have.property('meta'); });", "pm.test('Solo publicados', () => json.data.forEach(item => pm.expect(item.status).to.eql('published')));"] } }],
+          "request": { "method": "GET", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{base_url}}/api/v1/projects?page=1&per_page=12" }
+        },
+        {
+          "name": "Filtrar proyectos destacados",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Filtro featured correcto', () => pm.response.to.have.status(200));", "pm.test('Todos son destacados', () => pm.response.json().data.forEach(item => pm.expect(item.featured).to.eql(true)));"] } }],
+          "request": { "method": "GET", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{base_url}}/api/v1/projects?featured=true" }
+        },
+        {
+          "name": "Filtrar proyectos por Laravel",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Filtro technology correcto', () => pm.response.to.have.status(200));", "pm.test('Todos contienen Laravel', () => pm.response.json().data.forEach(item => pm.expect(item.technologies.some(tech => tech.slug === 'laravel')).to.eql(true)));"] } }],
+          "request": { "method": "GET", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{base_url}}/api/v1/projects?technology=laravel" }
+        },
+        {
+          "name": "Consultar proyecto seed por slug",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Proyecto público encontrado', () => pm.response.to.have.status(200));", "pm.test('Incluye relaciones', () => { const data = pm.response.json().data; pm.expect(data.slug).to.eql('intranet-arib'); pm.expect(data.technologies).to.be.an('array'); pm.expect(data.images).to.be.an('array'); });"] } }],
+          "request": { "method": "GET", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{base_url}}/api/v1/projects/intranet-arib" }
+        }
+      ]
+    },
+    {
+      "name": "03 - Administrar tecnologías",
+      "item": [
+        {
+          "name": "Crear tecnología",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Tecnología creada', () => pm.response.to.have.status(201));", "const responseData = pm.response.json().data;", "pm.test('Slug generado', () => pm.expect(responseData.slug).to.eql('postman-tech-' + pm.collectionVariables.get('run_id')));", "pm.collectionVariables.set('technology_id', responseData.id);"] } }],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }] },
+            "method": "POST",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Postman Tech {{run_id}}\",\n  \"icon\": null,\n  \"category\": \"other\"\n}" },
+            "url": "{{base_url}}/api/v1/admin/technologies"
+          }
+        },
+        {
+          "name": "Listar tecnologías como admin",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Listado admin correcto', () => pm.response.to.have.status(200));", "pm.test('Contiene tecnología temporal', () => pm.expect(pm.response.json().data.some(item => item.id == pm.collectionVariables.get('technology_id'))).to.eql(true));"] } }],
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }] }, "method": "GET", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{base_url}}/api/v1/admin/technologies" }
+        },
+        {
+          "name": "Consultar tecnología",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Tecnología encontrada', () => pm.response.to.have.status(200));", "pm.test('ID correcto', () => pm.expect(pm.response.json().data.id.toString()).to.eql(pm.collectionVariables.get('technology_id')));"] } }],
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }] }, "method": "GET", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{base_url}}/api/v1/admin/technologies/{{technology_id}}" }
+        },
+        {
+          "name": "Actualizar tecnología con PUT",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('PUT tecnología correcto', () => pm.response.to.have.status(200));", "pm.test('Categoría actualizada', () => pm.expect(pm.response.json().data.category).to.eql('devops'));"] } }],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }] },
+            "method": "PUT",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Postman Tech {{run_id}}\",\n  \"slug\": \"postman-tech-{{run_id}}\",\n  \"icon\": \"terminal\",\n  \"category\": \"devops\"\n}" },
+            "url": "{{base_url}}/api/v1/admin/technologies/{{technology_id}}"
+          }
+        },
+        {
+          "name": "Actualizar tecnología con PATCH",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('PATCH tecnología correcto', () => pm.response.to.have.status(200));", "pm.test('Icono actualizado', () => pm.expect(pm.response.json().data.icon).to.eql('code'));"] } }],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }] },
+            "method": "PATCH",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"icon\": \"code\"\n}" },
+            "url": "{{base_url}}/api/v1/admin/technologies/{{technology_id}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 - Administrar proyectos",
+      "item": [
+        {
+          "name": "Crear proyecto publicado",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Proyecto creado', () => pm.response.to.have.status(201));", "const responseData = pm.response.json().data;", "pm.test('Slug y relaciones creados', () => { pm.expect(responseData.slug).to.eql('proyecto-postman-' + pm.collectionVariables.get('run_id')); pm.expect(responseData.technologies.length).to.eql(2); });", "pm.collectionVariables.set('project_id', responseData.id);", "pm.collectionVariables.set('project_slug', responseData.slug);"] } }],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }] },
+            "method": "POST",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"title\": \"Proyecto Postman {{run_id}}\",\n  \"short_description\": \"Proyecto temporal de la colección Postman\",\n  \"description\": \"Proyecto creado automáticamente para verificar el backend de SystemSeed.\",\n  \"cover_image\": \"/images/postman-cover.png\",\n  \"github_url\": \"https://github.com/example/systemseed\",\n  \"demo_url\": null,\n  \"status\": \"published\",\n  \"featured\": true,\n  \"published_at\": \"2026-10-07T12:00:00-05:00\",\n  \"technologies\": [{{laravel_id}}, {{technology_id}}]\n}" },
+            "url": "{{base_url}}/api/v1/admin/projects"
+          }
+        },
+        {
+          "name": "Crear proyecto con slug duplicado",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Segundo proyecto creado', () => pm.response.to.have.status(201));", "const responseData = pm.response.json().data;", "pm.test('Colisión resuelta con -2', () => pm.expect(responseData.slug).to.eql(pm.collectionVariables.get('project_slug') + '-2'));", "pm.collectionVariables.set('duplicate_project_id', responseData.id);"] } }],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }] },
+            "method": "POST",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"title\": \"Proyecto Postman {{run_id}}\",\n  \"short_description\": \"Prueba de slug duplicado\",\n  \"description\": \"El slug debe terminar en guion dos.\",\n  \"status\": \"draft\",\n  \"featured\": false,\n  \"technologies\": [{{laravel_id}}]\n}" },
+            "url": "{{base_url}}/api/v1/admin/projects"
+          }
+        },
+        {
+          "name": "Listar proyectos como admin",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Listado admin paginado', () => pm.response.to.have.status(200));", "pm.test('Incluye proyecto temporal', () => pm.expect(pm.response.json().data.some(item => item.id == pm.collectionVariables.get('project_id'))).to.eql(true));"] } }],
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }] }, "method": "GET", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{base_url}}/api/v1/admin/projects" }
+        },
+        {
+          "name": "Consultar proyecto como admin",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Proyecto admin encontrado', () => pm.response.to.have.status(200));", "pm.test('ID correcto', () => pm.expect(pm.response.json().data.id.toString()).to.eql(pm.collectionVariables.get('project_id')));"] } }],
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }] }, "method": "GET", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{base_url}}/api/v1/admin/projects/{{project_id}}" }
+        },
+        {
+          "name": "Actualizar proyecto con PATCH sin cambiar slug",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('PATCH proyecto correcto', () => pm.response.to.have.status(200));", "const responseData = pm.response.json().data;", "pm.test('Título cambia y slug permanece', () => { pm.expect(responseData.title).to.eql('Proyecto Postman actualizado ' + pm.collectionVariables.get('run_id')); pm.expect(responseData.slug).to.eql(pm.collectionVariables.get('project_slug')); });"] } }],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }] },
+            "method": "PATCH",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"title\": \"Proyecto Postman actualizado {{run_id}}\",\n  \"short_description\": \"Descripción corta actualizada\"\n}" },
+            "url": "{{base_url}}/api/v1/admin/projects/{{project_id}}"
+          }
+        },
+        {
+          "name": "Actualizar proyecto completo con PUT",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('PUT proyecto correcto', () => pm.response.to.have.status(200));", "const responseData = pm.response.json().data;", "pm.test('Datos completos actualizados', () => { pm.expect(responseData.featured).to.eql(true); pm.expect(responseData.technologies.length).to.eql(2); });"] } }],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }] },
+            "method": "PUT",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"title\": \"Proyecto Postman actualizado {{run_id}}\",\n  \"slug\": \"{{project_slug}}\",\n  \"short_description\": \"Descripción actualizada por PUT\",\n  \"description\": \"Contenido completo actualizado desde Postman.\",\n  \"cover_image\": \"/images/postman-updated.png\",\n  \"github_url\": \"https://github.com/example/systemseed\",\n  \"demo_url\": \"https://example.com/demo\",\n  \"status\": \"published\",\n  \"featured\": true,\n  \"published_at\": \"2026-10-07T14:00:00-05:00\",\n  \"technologies\": [{{laravel_id}}, {{technology_id}}]\n}" },
+            "url": "{{base_url}}/api/v1/admin/projects/{{project_id}}"
+          }
+        },
+        {
+          "name": "Consultar proyecto creado públicamente",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Proyecto publicado visible', () => pm.response.to.have.status(200));", "pm.test('Incluye tecnologías e imágenes', () => { const data = pm.response.json().data; pm.expect(data.technologies).to.be.an('array'); pm.expect(data.images).to.be.an('array'); });"] } }],
+          "request": { "method": "GET", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{base_url}}/api/v1/projects/{{project_slug}}" }
+        },
+        {
+          "name": "Crear proyecto draft",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Draft creado', () => pm.response.to.have.status(201));", "const responseData = pm.response.json().data;", "pm.collectionVariables.set('draft_project_id', responseData.id);", "pm.collectionVariables.set('draft_project_slug', responseData.slug);"] } }],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }] },
+            "method": "POST",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"title\": \"Draft Postman {{run_id}}\",\n  \"short_description\": \"Proyecto no publicado\",\n  \"description\": \"Este proyecto no debe aparecer en la API pública.\",\n  \"status\": \"draft\",\n  \"featured\": false,\n  \"technologies\": []\n}" },
+            "url": "{{base_url}}/api/v1/admin/projects"
+          }
+        },
+        {
+          "name": "Comprobar que draft no es público",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Draft retorna 404 públicamente', () => pm.response.to.have.status(404));"] } }],
+          "request": { "method": "GET", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{base_url}}/api/v1/projects/{{draft_project_slug}}" }
+        }
+      ]
+    },
+    {
+      "name": "05 - Imágenes de proyectos",
+      "item": [
+        {
+          "name": "Agregar imagen",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Imagen creada', () => pm.response.to.have.status(201));", "const responseData = pm.response.json().data;", "pm.test('Orden correcto', () => pm.expect(responseData.sort_order).to.eql(1));", "pm.collectionVariables.set('image_id', responseData.id);"] } }],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }] },
+            "method": "POST",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"image_url\": \"/images/projects/postman-{{run_id}}.png\",\n  \"alt_text\": \"Imagen generada por la colección Postman\",\n  \"sort_order\": 1\n}" },
+            "url": "{{base_url}}/api/v1/admin/projects/{{project_id}}/images"
+          }
+        },
+        {
+          "name": "Eliminar imagen",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Imagen eliminada', () => pm.response.to.have.status(200));", "pm.test('Mensaje correcto', () => pm.expect(pm.response.json().message).to.eql('Imagen eliminada correctamente'));"] } }],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }] },
+            "method": "DELETE",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": "{{base_url}}/api/v1/admin/projects/{{project_id}}/images/{{image_id}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "06 - Permisos y validaciones",
+      "item": [
+        {
+          "name": "Usuario no puede crear proyectos",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Acceso denegado con 403', () => pm.response.to.have.status(403));", "pm.test('Mensaje no autorizado', () => pm.expect(pm.response.json().message).to.eql('No autorizado'));"] } }],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{user_token}}", "type": "string" }] },
+            "method": "POST",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"title\": \"No permitido\",\n  \"short_description\": \"No debe crearse\",\n  \"description\": \"Prueba de autorización\"\n}" },
+            "url": "{{base_url}}/api/v1/admin/projects"
+          }
+        },
+        {
+          "name": "Proyecto inválido retorna 422",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Validación retorna 422', () => pm.response.to.have.status(422));", "const errors = pm.response.json().errors;", "pm.test('Errores esperados', () => { pm.expect(errors).to.have.property('title'); pm.expect(errors).to.have.property('short_description'); pm.expect(errors).to.have.property('description'); pm.expect(errors).to.have.property('status'); });"] } }],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }] },
+            "method": "POST",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"title\": \"\",\n  \"status\": \"invalido\",\n  \"technologies\": [999999]\n}" },
+            "url": "{{base_url}}/api/v1/admin/projects"
+          }
+        },
+        {
+          "name": "Sin token retorna 401",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('No autenticado con 401', () => pm.response.to.have.status(401));"] } }],
+          "request": { "auth": { "type": "noauth" }, "method": "GET", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{base_url}}/api/v1/admin/projects" }
+        }
+      ]
+    },
+    {
+      "name": "07 - Google OAuth preparado",
+      "item": [
+        {
+          "name": "Redirect de Google sin seguir redirección",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Laravel genera redirección OAuth', () => pm.response.to.have.status(302));", "pm.test('Redirección apunta a Google', () => pm.expect(pm.response.headers.get('Location')).to.include('accounts.google.com'));"] } }],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": "{{base_url}}/api/v1/auth/google/redirect"
+          },
+          "protocolProfileBehavior": { "followRedirects": false },
+          "description": "Con credenciales configuradas debe retornar 302 hacia Google. El login real se completa manualmente en navegador."
+        },
+        {
+          "name": "Callback sin código maneja error",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Callback inválido controlado', () => pm.response.to.have.status(422));", "pm.test('No expone secretos', () => { const json = pm.response.json(); pm.expect(json.success).to.eql(false); pm.expect(json).not.to.have.property('exception'); });"] } }],
+          "request": { "method": "GET", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{base_url}}/api/v1/auth/google/callback" },
+          "description": "Prueba únicamente el manejo seguro de un callback inválido. El callback exitoso requiere autorización real de Google."
+        }
+      ]
+    },
+    {
+      "name": "08 - Admin Users",
+      "item": [
+        {
+          "name": "Listar usuarios y capturar usuario temporal",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Admin lista usuarios', () => pm.response.to.have.status(200));", "const target = pm.response.json().data.find(user => user.email === 'postman.' + pm.collectionVariables.get('run_id') + '@systemseed.local');", "pm.test('Usuario temporal encontrado', () => pm.expect(target).to.exist);", "pm.collectionVariables.set('managed_user_id', target.id);"] } }],
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }] }, "method": "GET", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{base_url}}/api/v1/admin/users" }
+        },
+        {
+          "name": "Ver usuario",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Usuario encontrado sin password', () => { pm.response.to.have.status(200); pm.expect(pm.response.json().data).not.to.have.property('password'); });"] } }],
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }] }, "method": "GET", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{base_url}}/api/v1/admin/users/{{managed_user_id}}" }
+        },
+        {
+          "name": "Cambiar rol a admin",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Rol actualizado', () => { pm.response.to.have.status(200); pm.expect(pm.response.json().data.role).to.eql('admin'); });"] } }],
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }] }, "method": "PATCH", "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"role\": \"admin\"\n}" }, "url": "{{base_url}}/api/v1/admin/users/{{managed_user_id}}" }
+        },
+        {
+          "name": "Desactivar y restaurar rol user",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Usuario desactivado', () => { pm.response.to.have.status(200); pm.expect(pm.response.json().data.is_active).to.eql(false); });"] } }],
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }] }, "method": "PATCH", "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"role\": \"user\",\n  \"is_active\": false\n}" }, "url": "{{base_url}}/api/v1/admin/users/{{managed_user_id}}" }
+        },
+        {
+          "name": "Reactivar usuario",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Usuario reactivado', () => { pm.response.to.have.status(200); pm.expect(pm.response.json().data.is_active).to.eql(true); });"] } }],
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }] }, "method": "PATCH", "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"is_active\": true\n}" }, "url": "{{base_url}}/api/v1/admin/users/{{managed_user_id}}" }
+        },
+        {
+          "name": "Eliminar usuario temporal",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Usuario eliminado', () => pm.response.to.have.status(200));"] } }],
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }] }, "method": "DELETE", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{base_url}}/api/v1/admin/users/{{managed_user_id}}" }
+        }
+      ]
+    },
+    {
+      "name": "09 - Favorites",
+      "item": [
+        {
+          "name": "Capturar proyecto publicado",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Proyecto disponible', () => pm.response.to.have.status(200));", "const project = pm.response.json().data.find(item => item.slug === 'intranet-arib');", "pm.test('Intranet ARIB encontrada', () => pm.expect(project).to.exist);", "pm.collectionVariables.set('favorite_project_id', project.id);"] } }],
+          "request": { "method": "GET", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{base_url}}/api/v1/projects?per_page=100" }
+        },
+        {
+          "name": "Agregar favorito",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Favorito agregado', () => pm.response.to.have.status(201));"] } }],
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{user_token}}", "type": "string" }] }, "method": "POST", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{base_url}}/api/v1/user/favorites/{{favorite_project_id}}" }
+        },
+        {
+          "name": "Agregar favorito duplicado sin duplicar",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Duplicado controlado', () => pm.response.to.have.status(201));"] } }],
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{user_token}}", "type": "string" }] }, "method": "POST", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{base_url}}/api/v1/user/favorites/{{favorite_project_id}}" }
+        },
+        {
+          "name": "Listar favoritos",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Lista contiene un favorito', () => { pm.response.to.have.status(200); pm.expect(pm.response.json().data.length).to.eql(1); });"] } }],
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{user_token}}", "type": "string" }] }, "method": "GET", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{base_url}}/api/v1/user/favorites" }
+        },
+        {
+          "name": "Eliminar favorito",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Favorito eliminado', () => pm.response.to.have.status(200));"] } }],
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{user_token}}", "type": "string" }] }, "method": "DELETE", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{base_url}}/api/v1/user/favorites/{{favorite_project_id}}" }
+        }
+      ]
+    },
+    {
+      "name": "10 - Contact Messages",
+      "item": [
+        {
+          "name": "Enviar mensaje público",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Mensaje creado', () => pm.response.to.have.status(201));", "pm.collectionVariables.set('message_id', pm.response.json().data.id);"] } }],
+          "request": { "method": "POST", "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"name\": \"Visitante Postman\",\n  \"email\": \"contacto.{{run_id}}@example.com\",\n  \"subject\": \"Consulta de proyecto\",\n  \"message\": \"Mensaje temporal creado por Postman.\"\n}" }, "url": "{{base_url}}/api/v1/contact" }
+        },
+        {
+          "name": "Listar mensajes no leídos",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Listado no leído correcto', () => pm.response.to.have.status(200));", "pm.test('Mensaje temporal presente', () => pm.expect(pm.response.json().data.some(item => item.id == pm.collectionVariables.get('message_id'))).to.eql(true));"] } }],
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }] }, "method": "GET", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{base_url}}/api/v1/admin/messages?read=false" }
+        },
+        {
+          "name": "Ver mensaje",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Mensaje encontrado', () => pm.response.to.have.status(200));"] } }],
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }] }, "method": "GET", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{base_url}}/api/v1/admin/messages/{{message_id}}" }
+        },
+        {
+          "name": "Marcar leído",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Mensaje leído', () => { pm.response.to.have.status(200); pm.expect(pm.response.json().data.is_read).to.eql(true); });"] } }],
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }] }, "method": "PATCH", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{base_url}}/api/v1/admin/messages/{{message_id}}/read" }
+        },
+        {
+          "name": "Marcar no leído",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Mensaje no leído', () => { pm.response.to.have.status(200); pm.expect(pm.response.json().data.is_read).to.eql(false); });"] } }],
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }] }, "method": "PATCH", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{base_url}}/api/v1/admin/messages/{{message_id}}/unread" }
+        },
+        {
+          "name": "Eliminar mensaje",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Mensaje eliminado', () => pm.response.to.have.status(200));"] } }],
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }] }, "method": "DELETE", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{base_url}}/api/v1/admin/messages/{{message_id}}" }
+        }
+      ]
+    },
+    {
+      "name": "11 - Experiences",
+      "item": [
+        {
+          "name": "Crear experiencia",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Experiencia creada', () => pm.response.to.have.status(201));", "pm.collectionVariables.set('experience_id', pm.response.json().data.id);"] } }],
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }] }, "method": "POST", "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"company\": \"SystemSeed {{run_id}}\",\n  \"position\": \"Backend Developer\",\n  \"description\": \"Experiencia temporal\",\n  \"start_date\": \"2025-01-01\",\n  \"is_current\": true,\n  \"location\": \"Perú\",\n  \"visible\": true\n}" }, "url": "{{base_url}}/api/v1/admin/experiences" }
+        },
+        {
+          "name": "Listar experiencias públicas",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Experiencia pública visible', () => { pm.response.to.have.status(200); pm.expect(pm.response.json().data.some(item => item.id == pm.collectionVariables.get('experience_id'))).to.eql(true); });"] } }],
+          "request": { "method": "GET", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{base_url}}/api/v1/experiences" }
+        },
+        {
+          "name": "Ver experiencia admin",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Experiencia encontrada', () => pm.response.to.have.status(200));"] } }],
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }] }, "method": "GET", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{base_url}}/api/v1/admin/experiences/{{experience_id}}" }
+        },
+        {
+          "name": "Actualizar experiencia",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Experiencia actualizada', () => { pm.response.to.have.status(200); pm.expect(pm.response.json().data.position).to.eql('Senior Backend Developer'); });"] } }],
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }] }, "method": "PATCH", "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"position\": \"Senior Backend Developer\"\n}" }, "url": "{{base_url}}/api/v1/admin/experiences/{{experience_id}}" }
+        },
+        {
+          "name": "Eliminar experiencia",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Experiencia eliminada', () => pm.response.to.have.status(200));"] } }],
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }] }, "method": "DELETE", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{base_url}}/api/v1/admin/experiences/{{experience_id}}" }
+        }
+      ]
+    },
+    {
+      "name": "12 - Education",
+      "item": [
+        {
+          "name": "Crear educación",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Educación creada', () => pm.response.to.have.status(201));", "pm.collectionVariables.set('education_id', pm.response.json().data.id);"] } }],
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }] }, "method": "POST", "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"institution\": \"Instituto Postman {{run_id}}\",\n  \"degree\": \"Ingeniería de Software\",\n  \"field_of_study\": \"Desarrollo\",\n  \"start_date\": \"2020-01-01\",\n  \"end_date\": \"2024-01-01\",\n  \"visible\": true\n}" }, "url": "{{base_url}}/api/v1/admin/education" }
+        },
+        {
+          "name": "Listar educación pública",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Educación pública visible', () => { pm.response.to.have.status(200); pm.expect(pm.response.json().data.some(item => item.id == pm.collectionVariables.get('education_id'))).to.eql(true); });"] } }],
+          "request": { "method": "GET", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{base_url}}/api/v1/education" }
+        },
+        {
+          "name": "Ver educación admin",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Educación encontrada', () => pm.response.to.have.status(200));"] } }],
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }] }, "method": "GET", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{base_url}}/api/v1/admin/education/{{education_id}}" }
+        },
+        {
+          "name": "Actualizar educación",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Educación actualizada', () => { pm.response.to.have.status(200); pm.expect(pm.response.json().data.field_of_study).to.eql('Backend'); });"] } }],
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }] }, "method": "PATCH", "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"field_of_study\": \"Backend\"\n}" }, "url": "{{base_url}}/api/v1/admin/education/{{education_id}}" }
+        },
+        {
+          "name": "Eliminar educación",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Educación eliminada', () => pm.response.to.have.status(200));"] } }],
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }] }, "method": "DELETE", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{base_url}}/api/v1/admin/education/{{education_id}}" }
+        }
+      ]
+    },
+    {
+      "name": "13 - Skills",
+      "item": [
+        {
+          "name": "Crear skill",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Skill creada', () => pm.response.to.have.status(201));", "pm.collectionVariables.set('skill_id', pm.response.json().data.id);"] } }],
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }] }, "method": "POST", "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"name\": \"Postman Skill {{run_id}}\",\n  \"category\": \"tools\",\n  \"level\": \"advanced\",\n  \"icon\": \"code\",\n  \"visible\": true\n}" }, "url": "{{base_url}}/api/v1/admin/skills" }
+        },
+        {
+          "name": "Listar skills públicas",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Skill pública visible', () => { pm.response.to.have.status(200); pm.expect(pm.response.json().data.some(item => item.id == pm.collectionVariables.get('skill_id'))).to.eql(true); });"] } }],
+          "request": { "method": "GET", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{base_url}}/api/v1/skills" }
+        },
+        {
+          "name": "Ver skill admin",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Skill encontrada', () => pm.response.to.have.status(200));"] } }],
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }] }, "method": "GET", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{base_url}}/api/v1/admin/skills/{{skill_id}}" }
+        },
+        {
+          "name": "Actualizar skill",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Skill actualizada', () => { pm.response.to.have.status(200); pm.expect(pm.response.json().data.level).to.eql('expert'); });"] } }],
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }] }, "method": "PATCH", "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"level\": \"expert\"\n}" }, "url": "{{base_url}}/api/v1/admin/skills/{{skill_id}}" }
+        },
+        {
+          "name": "Eliminar skill",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Skill eliminada', () => pm.response.to.have.status(200));"] } }],
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }] }, "method": "DELETE", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{base_url}}/api/v1/admin/skills/{{skill_id}}" }
+        }
+      ]
+    },
+    {
+      "name": "14 - Profile y CV",
+      "item": [
+        {
+          "name": "Obtener perfil público",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Perfil público disponible', () => pm.response.to.have.status(200));", "pm.test('Respuesta contiene redes sociales', () => { const profile = pm.response.json().data; ['github_url','linkedin_url','website_url','instagram_url','youtube_url','tiktok_url','whatsapp_url','cv_url'].forEach(key => pm.expect(profile).to.have.property(key)); });"] } }],
+          "request": { "method": "GET", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{base_url}}/api/v1/profile" }
+        },
+        {
+          "name": "Obtener perfil admin y guardar original",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Perfil admin disponible', () => pm.response.to.have.status(200));", "const profile = pm.response.json().data;", "const restorable = { full_name: profile.full_name, professional_title: profile.professional_title, bio: profile.bio, location: profile.location, github_url: profile.github_url, linkedin_url: profile.linkedin_url, website_url: profile.website_url, instagram_url: profile.instagram_url, youtube_url: profile.youtube_url, tiktok_url: profile.tiktok_url, whatsapp_url: profile.whatsapp_url };", "pm.collectionVariables.set('original_profile_json', JSON.stringify(restorable));"] } }],
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }] }, "method": "GET", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{base_url}}/api/v1/admin/profile" }
+        },
+        {
+          "name": "Actualizar perfil y redes sociales",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Perfil actualizado', () => pm.response.to.have.status(200));", "pm.test('Instagram actualizado', () => pm.expect(pm.response.json().data.instagram_url).to.eql('https://instagram.com/systemseed'));" ] } }],
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }] }, "method": "PATCH", "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"full_name\": \"Heiner Postman {{run_id}}\",\n  \"professional_title\": \"Backend Developer\",\n  \"instagram_url\": \"https://instagram.com/systemseed\",\n  \"youtube_url\": \"https://youtube.com/@systemseed\",\n  \"tiktok_url\": \"https://tiktok.com/@systemseed\",\n  \"whatsapp_url\": \"https://wa.me/51999999999\"\n}" }, "url": "{{base_url}}/api/v1/admin/profile" }
+        },
+        {
+          "name": "Restaurar perfil original",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Perfil original restaurado', () => pm.response.to.have.status(200));"] } }],
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }] }, "method": "PATCH", "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{{original_profile_json}}" }, "url": "{{base_url}}/api/v1/admin/profile" }
+        },
+        {
+          "name": "Subir o reemplazar CV PDF (manual)",
+          "disabled": true,
+          "event": [{ "listen": "prerequest", "script": { "type": "text/javascript", "exec": ["if (!pm.collectionVariables.get('cv_file_path')) {", "    console.log('CV omitido: configure cv_file_path para ejecutar esta solicitud manual.');", "    pm.execution.skipRequest();", "}"] } }],
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }] }, "method": "POST", "header": [{ "key": "Accept", "value": "application/json" }], "body": { "mode": "formdata", "formdata": [{ "key": "cv", "type": "file", "src": "{{cv_file_path}}" }] }, "url": "{{base_url}}/api/v1/admin/profile/cv", "description": "Request manual: seleccione un PDF de hasta 10 MB en el campo cv antes de enviarlo." }
+        },
+        {
+          "name": "Eliminar CV (manual)",
+          "disabled": true,
+          "event": [{ "listen": "prerequest", "script": { "type": "text/javascript", "exec": ["if (pm.collectionVariables.get('allow_cv_delete') !== 'true') {", "    console.log('Eliminación de CV omitida: cambie allow_cv_delete a true para confirmarla.');", "    pm.execution.skipRequest();", "}"] } }],
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }] }, "method": "DELETE", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{base_url}}/api/v1/admin/profile/cv", "description": "Request manual y destructivo: elimina el CV almacenado actualmente." }
+        }
+      ]
+    },
+    {
+      "name": "15 - Certificates",
+      "item": [
+        {
+          "name": "Crear certificado temporal",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Certificado creado', () => pm.response.to.have.status(201));", "pm.collectionVariables.set('certificate_id', pm.response.json().data.id);"] } }],
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }] }, "method": "POST", "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"title\": \"Certificado Postman {{run_id}}\",\n  \"institution\": \"SystemSeed Academy\",\n  \"description\": \"Certificado temporal de prueba\",\n  \"issued_at\": \"2026-10-07\",\n  \"credential_id\": \"POSTMAN-{{run_id}}\",\n  \"verification_url\": \"https://example.com/verify/{{run_id}}\",\n  \"category\": \"backend\",\n  \"visible\": true,\n  \"sort_order\": 1\n}" }, "url": "{{base_url}}/api/v1/admin/certificates" }
+        },
+        {
+          "name": "Listar certificados públicos",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Certificado temporal es público', () => { pm.response.to.have.status(200); pm.expect(pm.response.json().data.some(item => item.id == pm.collectionVariables.get('certificate_id'))).to.eql(true); });"] } }],
+          "request": { "method": "GET", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{base_url}}/api/v1/certificates" }
+        },
+        {
+          "name": "Ver certificado público",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Certificado público encontrado', () => pm.response.to.have.status(200));"] } }],
+          "request": { "method": "GET", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{base_url}}/api/v1/certificates/{{certificate_id}}" }
+        },
+        {
+          "name": "Listar certificados admin",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Listado admin correcto', () => pm.response.to.have.status(200));"] } }],
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }] }, "method": "GET", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{base_url}}/api/v1/admin/certificates" }
+        },
+        {
+          "name": "Ver certificado admin",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Certificado admin encontrado', () => pm.response.to.have.status(200));"] } }],
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }] }, "method": "GET", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{base_url}}/api/v1/admin/certificates/{{certificate_id}}" }
+        },
+        {
+          "name": "Actualizar certificado",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Certificado actualizado', () => { pm.response.to.have.status(200); pm.expect(pm.response.json().data.visible).to.eql(false); });"] } }],
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }] }, "method": "PATCH", "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"description\": \"Certificado actualizado desde Postman\",\n  \"visible\": false\n}" }, "url": "{{base_url}}/api/v1/admin/certificates/{{certificate_id}}" }
+        },
+        {
+          "name": "Reemplazar archivo del certificado (manual)",
+          "disabled": true,
+          "event": [{ "listen": "prerequest", "script": { "type": "text/javascript", "exec": ["if (!pm.collectionVariables.get('certificate_file_path')) {", "    console.log('Archivo omitido: configure certificate_file_path para ejecutar esta solicitud manual.');", "    pm.execution.skipRequest();", "}"] } }],
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }] }, "method": "POST", "header": [{ "key": "Accept", "value": "application/json" }], "body": { "mode": "formdata", "formdata": [{ "key": "_method", "value": "PATCH", "type": "text" }, { "key": "file", "type": "file", "src": "{{certificate_file_path}}" }] }, "url": "{{base_url}}/api/v1/admin/certificates/{{certificate_id}}", "description": "Request manual: seleccione PDF, JPG, JPEG, PNG o WEBP de hasta 10 MB." }
+        },
+        {
+          "name": "Eliminar certificado temporal",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Certificado eliminado', () => pm.response.to.have.status(200));"] } }],
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }] }, "method": "DELETE", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{base_url}}/api/v1/admin/certificates/{{certificate_id}}" }
+        }
+      ]
+    },
+    {
+      "name": "17 - Acceso de usuarios y recursos",
+      "item": [
+        {
+          "name": "Preparar proyectos del seeder",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Proyectos de acceso disponibles', () => pm.response.to.have.status(200));", "var accessProjects = pm.response.json().data;", "var publicDemoProject = accessProjects.find(item => item.slug === 'intranet-arib');", "var privateDemoProject = accessProjects.find(item => item.slug === 'acopio-web');", "var templateProject = accessProjects.find(item => item.slug === 'laravel-api-starter');", "pm.test('Seeder contiene demo público, privado y plantilla', () => { pm.expect(publicDemoProject).to.exist; pm.expect(privateDemoProject).to.exist; pm.expect(templateProject).to.exist; });", "pm.collectionVariables.set('public_demo_project_id', publicDemoProject.id);", "pm.collectionVariables.set('private_demo_project_id', privateDemoProject.id);", "pm.collectionVariables.set('template_project_id', templateProject.id);"] } }],
+          "request": { "method": "GET", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{base_url}}/api/v1/projects?per_page=100" }
+        },
+        {
+          "name": "Abrir demo público sin login",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Demo público disponible', () => { pm.response.to.have.status(200); pm.expect(pm.response.json().data.url).to.be.a('string').and.not.empty; });"] } }],
+          "request": { "auth": { "type": "noauth" }, "method": "GET", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{base_url}}/api/v1/projects/{{public_demo_project_id}}/demo" }
+        },
+        {
+          "name": "Demo privado sin login retorna 401",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Demo privado protegido', () => pm.response.to.have.status(401));"] } }],
+          "request": { "auth": { "type": "noauth" }, "method": "GET", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{base_url}}/api/v1/projects/{{private_demo_project_id}}/demo" }
+        },
+        {
+          "name": "Abrir demo privado con login",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Usuario abre demo privado', () => { pm.response.to.have.status(200); pm.expect(pm.response.json().data.url).to.be.a('string').and.not.empty; });"] } }],
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{user_token}}", "type": "string" }] }, "method": "GET", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{base_url}}/api/v1/projects/{{private_demo_project_id}}/demo" }
+        },
+        {
+          "name": "Guardar plantilla",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Plantilla guardada', () => pm.response.to.have.status(201));"] } }],
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{user_token}}", "type": "string" }] }, "method": "POST", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{base_url}}/api/v1/user/templates/{{template_project_id}}" }
+        },
+        {
+          "name": "Listar plantillas guardadas",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Lista contiene plantilla', () => { pm.response.to.have.status(200); pm.expect(pm.response.json().data.some(item => item.id == pm.collectionVariables.get('template_project_id'))).to.eql(true); });"] } }],
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{user_token}}", "type": "string" }] }, "method": "GET", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{base_url}}/api/v1/user/templates" }
+        },
+        {
+          "name": "Seguir proyecto",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Proyecto seguido', () => pm.response.to.have.status(201));"] } }],
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{user_token}}", "type": "string" }] }, "method": "POST", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{base_url}}/api/v1/user/following/{{private_demo_project_id}}" }
+        },
+        {
+          "name": "Listar proyectos seguidos",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Lista contiene proyecto seguido', () => { pm.response.to.have.status(200); pm.expect(pm.response.json().data.some(item => item.id == pm.collectionVariables.get('private_demo_project_id'))).to.eql(true); });"] } }],
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{user_token}}", "type": "string" }] }, "method": "GET", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{base_url}}/api/v1/user/following" }
+        },
+        {
+          "name": "Crear novedad del proyecto seguido",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Novedad creada', () => pm.response.to.have.status(201));", "pm.collectionVariables.set('project_update_id', pm.response.json().data.id);"] } }],
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }] }, "method": "POST", "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"title\": \"Novedad Postman {{run_id}}\",\n  \"content\": \"Actualización temporal creada por la colección.\",\n  \"published_at\": \"2026-10-09T12:00:00-05:00\",\n  \"visible\": true\n}" }, "url": "{{base_url}}/api/v1/admin/projects/{{private_demo_project_id}}/updates" }
+        },
+        {
+          "name": "Listar novedades de proyectos seguidos",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Usuario recibe novedad seguida', () => { pm.response.to.have.status(200); pm.expect(pm.response.json().data.some(item => item.id == pm.collectionVariables.get('project_update_id'))).to.eql(true); });"] } }],
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{user_token}}", "type": "string" }] }, "method": "GET", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{base_url}}/api/v1/user/project-updates" }
+        },
+        {
+          "name": "Listar novedades públicas del proyecto",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Novedad visible públicamente', () => { pm.response.to.have.status(200); pm.expect(pm.response.json().data.some(item => item.id == pm.collectionVariables.get('project_update_id'))).to.eql(true); });"] } }],
+          "request": { "auth": { "type": "noauth" }, "method": "GET", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{base_url}}/api/v1/projects/{{private_demo_project_id}}/updates" }
+        },
+        {
+          "name": "Descargar recurso como usuario",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Descarga autorizada', () => { pm.response.to.have.status(200); pm.expect(pm.response.json().data.url).to.be.a('string').and.not.empty; });"] } }],
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{user_token}}", "type": "string" }] }, "method": "GET", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{base_url}}/api/v1/projects/{{private_demo_project_id}}/download" }
+        },
+        {
+          "name": "Acceder a código fuente como usuario",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Código fuente autorizado', () => { pm.response.to.have.status(200); pm.expect(pm.response.json().data.url).to.be.a('string').and.not.empty; });"] } }],
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{user_token}}", "type": "string" }] }, "method": "GET", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{base_url}}/api/v1/projects/{{private_demo_project_id}}/source-code" }
+        },
+        {
+          "name": "Dashboard usuario con resumen",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Dashboard incluye resumen', () => { pm.response.to.have.status(200); var dashboard = pm.response.json(); pm.expect(dashboard).to.have.keys('message','user','favorites_count','saved_templates_count','following_count','recent_updates'); pm.expect(dashboard.saved_templates_count).to.be.at.least(1); pm.expect(dashboard.following_count).to.be.at.least(1); });"] } }],
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{user_token}}", "type": "string" }] }, "method": "GET", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{base_url}}/api/v1/user/dashboard" }
+        },
+        {
+          "name": "Quitar plantilla guardada",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Plantilla retirada', () => pm.response.to.have.status(200));"] } }],
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{user_token}}", "type": "string" }] }, "method": "DELETE", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{base_url}}/api/v1/user/templates/{{template_project_id}}" }
+        },
+        {
+          "name": "Dejar de seguir proyecto",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Seguimiento retirado', () => pm.response.to.have.status(200));"] } }],
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{user_token}}", "type": "string" }] }, "method": "DELETE", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{base_url}}/api/v1/user/following/{{private_demo_project_id}}" }
+        },
+        {
+          "name": "Eliminar novedad temporal",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Novedad temporal eliminada', () => pm.response.to.have.status(200));"] } }],
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }] }, "method": "DELETE", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{base_url}}/api/v1/admin/projects/{{private_demo_project_id}}/updates/{{project_update_id}}" }
+        }
+      ]
+    },
+    {
+      "name": "18 - Seguridad y recuperación",
+      "item": [
+        {
+          "name": "Forgot password con respuesta genérica",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Recuperación no revela usuarios', () => { pm.response.to.have.status(200); pm.expect(pm.response.json().message).to.include('Si el correo está registrado'); });"] } }],
+          "request": { "method": "POST", "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"email\": \"correo.inexistente.{{run_id}}@example.com\"\n}" }, "url": "{{base_url}}/api/v1/auth/forgot-password" }
+        },
+        {
+          "name": "Reset password con token de correo (manual)",
+          "disabled": true,
+          "event": [{ "listen": "prerequest", "script": { "type": "text/javascript", "exec": ["if (!pm.collectionVariables.get('password_reset_token')) {", "    console.log('Reset omitido: copie el token recibido y configure password_reset_token.');", "    pm.execution.skipRequest();", "}"] } }],
+          "request": { "method": "POST", "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{user_email}}\",\n  \"token\": \"{{password_reset_token}}\",\n  \"password\": \"ResetPassword9\",\n  \"password_confirmation\": \"ResetPassword9\"\n}" }, "url": "{{base_url}}/api/v1/auth/reset-password", "description": "Prueba manual. Obtenga el token desde el correo o el log de Laravel. Cambia la contraseña del usuario indicado y revoca sus tokens." }
+        },
+        {
+          "name": "Estado de verificación de correo",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Estado de verificación disponible', () => { pm.response.to.have.status(200); pm.expect(pm.response.json().verified).to.be.a('boolean'); });"] } }],
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{user_token}}", "type": "string" }] }, "method": "GET", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{base_url}}/api/v1/auth/email/verification-status" }
+        },
+        {
+          "name": "Reenviar verificación de correo",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Solicitud de verificación aceptada', () => { pm.response.to.have.status(200); pm.expect(pm.response.json()).to.have.property('verified'); });"] } }],
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{user_token}}", "type": "string" }] }, "method": "POST", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{base_url}}/api/v1/auth/email/verification-notification" }
+        },
+        {
+          "name": "Verificar correo con URL firmada (manual)",
+          "disabled": true,
+          "event": [{ "listen": "prerequest", "script": { "type": "text/javascript", "exec": ["if (!pm.collectionVariables.get('verification_url')) {", "    console.log('Verificación omitida: copie la URL firmada completa en verification_url.');", "    pm.execution.skipRequest();", "}"] } }],
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{user_token}}", "type": "string" }] }, "method": "GET", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{verification_url}}", "description": "Prueba manual: pegue sin modificar la URL firmada recibida por correo. El token Bearer debe pertenecer al mismo usuario." }
+        },
+        {
+          "name": "Crear usuario temporal de seguridad",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Usuario de seguridad creado', () => pm.response.to.have.status(201));", "var securityPayload = pm.response.json();", "pm.collectionVariables.set('security_user_id', securityPayload.user.id);", "pm.collectionVariables.set('security_token', securityPayload.token);", "pm.collectionVariables.set('security_email', securityPayload.user.email);"] } }],
+          "request": { "method": "POST", "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"name\": \"Security Postman\",\n  \"email\": \"security.{{run_id}}@systemseed.local\",\n  \"password\": \"Password123\",\n  \"password_confirmation\": \"Password123\"\n}" }, "url": "{{base_url}}/api/v1/auth/register" }
+        },
+        {
+          "name": "Contraseña actual incorrecta",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Contraseña incorrecta retorna 422', () => { pm.response.to.have.status(422); pm.expect(pm.response.json().errors).to.have.property('current_password'); });"] } }],
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{security_token}}", "type": "string" }] }, "method": "PATCH", "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"current_password\": \"Incorrecta123\",\n  \"password\": \"SecurityPassword9\",\n  \"password_confirmation\": \"SecurityPassword9\"\n}" }, "url": "{{base_url}}/api/v1/user/password" }
+        },
+        {
+          "name": "Cambiar contraseña autenticado",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Contraseña actualizada y sesión revocada', () => pm.response.to.have.status(200));"] } }],
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{security_token}}", "type": "string" }] }, "method": "PATCH", "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"current_password\": \"Password123\",\n  \"password\": \"SecurityPassword9\",\n  \"password_confirmation\": \"SecurityPassword9\"\n}" }, "url": "{{base_url}}/api/v1/user/password" }
+        },
+        {
+          "name": "Login con nueva contraseña",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Nueva contraseña permite login', () => pm.response.to.have.status(200));", "pm.collectionVariables.set('security_token', pm.response.json().token);"] } }],
+          "request": { "method": "POST", "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{security_email}}\",\n  \"password\": \"SecurityPassword9\"\n}" }, "url": "{{base_url}}/api/v1/auth/login" }
+        },
+        {
+          "name": "Rate limit de login (manual)",
+          "disabled": true,
+          "event": [{ "listen": "prerequest", "script": { "type": "text/javascript", "exec": ["if (pm.collectionVariables.get('run_rate_limit_test') !== 'true') {", "    console.log('Rate limit omitido: configure run_rate_limit_test=true y repita esta solicitud 11 veces en un minuto.');", "    pm.execution.skipRequest();", "}"] } }],
+          "request": { "method": "POST", "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"email\": \"rate-limit-postman@example.com\",\n  \"password\": \"Incorrecta123\"\n}" }, "url": "{{base_url}}/api/v1/auth/login", "description": "Prueba manual segura: ejecute 11 veces durante un minuto. Las primeras 10 respuestas son 422 y la siguiente debe ser 429." }
+        },
+        {
+          "name": "Eliminar usuario temporal de seguridad",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Usuario de seguridad eliminado', () => pm.response.to.have.status(200));"] } }],
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }] }, "method": "DELETE", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{base_url}}/api/v1/admin/users/{{security_user_id}}" }
+        }
+      ]
+    },
+    {
+      "name": "19 - Limpieza y logout",
+      "item": [
+        {
+          "name": "Eliminar proyecto draft",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Draft eliminado', () => pm.response.to.have.status(200));"] } }],
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }] }, "method": "DELETE", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{base_url}}/api/v1/admin/projects/{{draft_project_id}}" }
+        },
+        {
+          "name": "Eliminar proyecto duplicado",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Duplicado eliminado', () => pm.response.to.have.status(200));"] } }],
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }] }, "method": "DELETE", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{base_url}}/api/v1/admin/projects/{{duplicate_project_id}}" }
+        },
+        {
+          "name": "Eliminar proyecto principal",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Proyecto principal eliminado', () => pm.response.to.have.status(200));"] } }],
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }] }, "method": "DELETE", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{base_url}}/api/v1/admin/projects/{{project_id}}" }
+        },
+        {
+          "name": "Eliminar tecnología temporal",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Tecnología eliminada', () => pm.response.to.have.status(200));"] } }],
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }] }, "method": "DELETE", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{base_url}}/api/v1/admin/technologies/{{technology_id}}" }
+        },
+        {
+          "name": "Comprobar token del usuario temporal eliminado",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Token eliminado retorna 401', () => pm.response.to.have.status(401));"] } }],
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{registered_token}}", "type": "string" }] }, "method": "POST", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{base_url}}/api/v1/auth/logout" }
+        },
+        {
+          "name": "Logout usuario",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Logout user correcto', () => pm.response.to.have.status(200));"] } }],
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{user_token}}", "type": "string" }] }, "method": "POST", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{base_url}}/api/v1/auth/logout" }
+        },
+        {
+          "name": "Logout administrador",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Logout admin correcto', () => pm.response.to.have.status(200));"] } }],
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }] }, "method": "POST", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{base_url}}/api/v1/auth/logout" }
+        }
+      ]
+    }
+  ]
+}
