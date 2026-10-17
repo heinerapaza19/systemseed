@@ -32,6 +32,11 @@ return [
         'client_id' => env('GOOGLE_CLIENT_ID'),
         'client_secret' => env('GOOGLE_CLIENT_SECRET'),
         'redirect' => env('GOOGLE_REDIRECT_URI'),
+        // En Windows PHP suele no traer certificados raíz (cURL error 60).
+        // Si existe storage/certs/cacert.pem se usa para hablar con Google.
+        'guzzle' => is_file(storage_path('certs/cacert.pem'))
+            ? ['verify' => storage_path('certs/cacert.pem')]
+            : [],
     ],
 
     'slack' => [

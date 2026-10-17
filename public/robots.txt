@@ -1,2 +1,12 @@
 User-agent: *
-Disallow:
+Allow: /
+Disallow: /admin
+Disallow: /mi-cuenta
+Disallow: /api/
+Disallow: /login
+Disallow: /registro
+Disallow: /recuperar-contrasena
+Disallow: /restablecer-contrasena
+Disallow: /auth/
+
+# Mapa del sitio: https://TU-DOMINIO/sitemap.xml
