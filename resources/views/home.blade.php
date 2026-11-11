@@ -9,17 +9,18 @@
             <div class="animate-fade-up">
                 <span class="chip chip-lime !px-3 !py-1.5 font-mono !text-[11px]">
                     <span class="h-1.5 w-1.5 animate-pulse rounded-full bg-seed-lime"></span>
-                    Portafolio · proyectos · plantillas · recursos
+                    <span x-text="profile.hero_eyebrow || 'Portafolio · proyectos · plantillas · recursos'">Portafolio · proyectos · plantillas · recursos</span>
                 </span>
                 <h1 class="mt-6 text-[2.6rem] font-black leading-[1.02] sm:text-6xl xl:text-[4.25rem]">
-                    Ideas que germinan en <span class="text-gradient">software real</span>.
+                    <span x-text="profile.hero_title || 'Ideas que germinan en'">Ideas que germinan en</span>
+                    <span class="text-gradient" x-text="profile.hero_highlight || 'software real.'">software real.</span>
                 </h1>
                 <p class="mt-6 flex flex-wrap items-center gap-x-3 gap-y-1 text-lg font-bold">
                     <span x-text="profile.full_name || 'Heiner'">Heiner</span>
                     <span class="h-1 w-1 rounded-full bg-seed-dim"></span>
                     <span class="text-seed-teal" x-text="profile.professional_title || 'Desarrollador Full Stack'">Desarrollador Full Stack</span>
                 </p>
-                <p class="mt-4 max-w-xl text-[15px] leading-7 text-seed-muted sm:text-base" x-text="profile.bio || 'Diseño y construyo plataformas web, APIs y aplicaciones móviles. En SystemSeed comparto mis proyectos, demos y plantillas listas para reutilizar.'">
+                <p class="mt-4 max-w-xl text-[15px] leading-7 text-seed-muted sm:text-base" x-text="profile.hero_description || profile.bio || 'Diseño y construyo plataformas web, APIs y aplicaciones móviles. En SystemSeed comparto mis proyectos, demos y plantillas listas para reutilizar.'">
                     Diseño y construyo plataformas web, APIs y aplicaciones móviles.
                 </p>
                 <div class="mt-8 flex flex-wrap gap-3">
@@ -116,7 +117,10 @@
     <section id="sobre-mi" class="section section-alt border-b border-white/5">
         <div class="site-container grid items-center gap-12 lg:grid-cols-2 [&>*]:min-w-0">
             <div>
-                <x-section-heading eyebrow="Presentación" title="Sobre" highlight="mí" />
+                <div>
+                    <p class="eyebrow">Presentación</p>
+                    <h2 class="section-title mt-3" x-text="profile.about_title || 'Sobre mí'">Sobre mí</h2>
+                </div>
                 <p class="mt-5 text-[15px] leading-8 text-seed-muted" x-text="profile.bio || 'Desarrollo aplicaciones web y móviles, APIs y experiencias digitales pensadas para resolver problemas reales.'"></p>
                 <div class="mt-6 flex flex-wrap items-center gap-2">
                     <span x-show="profile.location" class="chip chip-teal !px-3 !py-1.5"><x-icon name="map-pin" :size="13" /> <span x-text="profile.location"></span></span>
@@ -129,7 +133,7 @@
                         ['monitor', 'Interfaces cuidadas', 'Diseño claro, accesible y responsive.'],
                         ['shield', 'Buenas prácticas', 'Roles, permisos, pruebas y documentación.'],
                     ] as [$icon, $title, $text])
-                        <div class="flex gap-3 rounded-2xl border border-white/[.06] bg-seed-850/70 p-4">
+                        <div class="group flex gap-3 rounded-2xl border border-white/[.06] bg-seed-850/70 p-4 transition duration-300 hover:-translate-y-1 hover:border-seed-lime/30 hover:bg-seed-800/90">
                             <x-icon :name="$icon" :size="20" class="mt-0.5 text-seed-lime" />
                             <div><p class="text-sm font-bold">{{ $title }}</p><p class="mt-1 text-xs leading-5 text-seed-muted">{{ $text }}</p></div>
                         </div>
@@ -209,9 +213,14 @@
     {{-- ====================== EXPERIENCIA Y EDUCACIÓN ====================== --}}
     <section id="trayectoria" class="section section-base border-b border-white/5">
         <div class="site-container">
-            <x-section-heading eyebrow="Trayectoria" title="Experiencia y" highlight="educación" copy="El camino recorrido: proyectos, equipos y formación." />
-            <div class="mt-12 grid gap-12 lg:grid-cols-2">
-                <div>
+            <div>
+                <p class="eyebrow">Trayectoria</p>
+                <h2 class="section-title mt-3" x-text="profile.journey_title || 'Experiencia y educación'">Experiencia y educación</h2>
+                <p class="section-copy" x-text="profile.journey_intro || 'El camino recorrido: proyectos, equipos y formación.'">El camino recorrido: proyectos, equipos y formación.</p>
+            </div>
+            <div class="mt-12 grid gap-6 lg:grid-cols-2">
+                <div class="panel relative overflow-hidden">
+                    <span class="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-seed-lime/5 blur-3xl"></span>
                     <h3 class="flex items-center gap-3 text-lg font-extrabold"><span class="grid h-10 w-10 place-items-center rounded-xl bg-seed-lime/10 text-seed-lime"><x-icon name="briefcase" :size="19" /></span> Experiencia</h3>
                     <div x-show="loading" class="mt-8"><x-loading-state type="list" :count="2" /></div>
                     <ol x-cloak x-show="!loading && experiences.length" class="timeline ml-5 mt-8">
@@ -228,9 +237,13 @@
                             </li>
                         </template>
                     </ol>
-                    <p x-cloak x-show="!loading && !experiences.length" class="mt-6 text-sm text-seed-muted">La experiencia se publicará próximamente.</p>
+                    <div x-cloak x-show="!loading && !experiences.length" class="mt-7 rounded-2xl border border-dashed border-seed-lime/20 bg-seed-lime/[.03] p-6 text-center">
+                        <x-icon name="leaf" :size="24" class="mx-auto text-seed-lime" />
+                        <p class="mt-3 text-sm leading-6 text-seed-muted" x-text="profile.experience_empty_text || 'La experiencia se publicará próximamente.'">La experiencia se publicará próximamente.</p>
+                    </div>
                 </div>
-                <div>
+                <div class="panel relative overflow-hidden">
+                    <span class="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-seed-cyan/5 blur-3xl"></span>
                     <h3 class="flex items-center gap-3 text-lg font-extrabold"><span class="grid h-10 w-10 place-items-center rounded-xl bg-seed-cyan/10 text-seed-cyan"><x-icon name="graduation" :size="19" /></span> Educación</h3>
                     <div x-show="loading" class="mt-8"><x-loading-state type="list" :count="2" /></div>
                     <ol x-cloak x-show="!loading && education.length" class="timeline ml-5 mt-8">
@@ -244,7 +257,10 @@
                             </li>
                         </template>
                     </ol>
-                    <p x-cloak x-show="!loading && !education.length" class="mt-6 text-sm text-seed-muted">La formación se publicará próximamente.</p>
+                    <div x-cloak x-show="!loading && !education.length" class="mt-7 rounded-2xl border border-dashed border-seed-cyan/20 bg-seed-cyan/[.03] p-6 text-center">
+                        <x-icon name="graduation" :size="24" class="mx-auto text-seed-cyan" />
+                        <p class="mt-3 text-sm leading-6 text-seed-muted" x-text="profile.education_empty_text || 'La formación se publicará próximamente.'">La formación se publicará próximamente.</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -336,7 +352,11 @@
     <section id="contacto" class="section section-base">
         <div class="site-container grid gap-12 lg:grid-cols-[.85fr_1.15fr] [&>*]:min-w-0">
             <div>
-                <x-section-heading eyebrow="Hablemos" title="¿Tienes un proyecto" highlight="en mente?" copy="Cuéntame qué quieres construir. Respondo los mensajes que llegan desde este formulario." />
+                <div>
+                    <p class="eyebrow">Hablemos</p>
+                    <h2 class="section-title mt-3" x-text="profile.contact_title || '¿Tienes un proyecto en mente?'">¿Tienes un proyecto en mente?</h2>
+                    <p class="section-copy" x-text="profile.contact_intro || 'Cuéntame qué quieres construir. Respondo los mensajes que llegan desde este formulario.'">Cuéntame qué quieres construir. Respondo los mensajes que llegan desde este formulario.</p>
+                </div>
                 <ul class="mt-8 space-y-3 text-sm">
                     <li x-show="profile.location" class="flex items-center gap-3 text-slate-200"><span class="grid h-10 w-10 place-items-center rounded-xl border border-white/10 bg-seed-850 text-seed-teal"><x-icon name="map-pin" :size="17" /></span> <span x-text="profile.location"></span></li>
                     <li class="flex items-center gap-3 text-slate-200"><span class="grid h-10 w-10 place-items-center rounded-xl border border-white/10 bg-seed-850 text-seed-teal"><x-icon name="clock" :size="17" /></span> Respuesta en 24–48 h hábiles</li>

@@ -95,12 +95,15 @@
     .form-hint { @apply mt-1.5 text-[11px] text-seed-dim; }
     .form-error { @apply mt-1.5 text-xs text-seed-coral; }
     .checkbox { @apply h-4 w-4 rounded border-white/20 bg-seed-900 text-seed-lime focus:ring-seed-teal/40 focus:ring-offset-0; }
+    .avatar-zoom { accent-color: var(--seed-lime); }
 
     /* ---------- Navegación ---------- */
-    .nav-link { @apply relative px-1 py-2 text-sm font-medium text-slate-300 transition hover:text-seed-lime; }
+    .nav-link { @apply relative px-1 py-2 text-sm font-medium text-slate-300 transition duration-200 hover:scale-105 hover:text-seed-lime; }
     .nav-link-active { @apply text-seed-lime; }
     .nav-link-active::after { content: ''; @apply absolute -bottom-[22px] left-0 right-0 h-0.5 bg-seed-lime; box-shadow: 0 0 10px #b8ff39; }
-    .side-link { @apply relative flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-seed-muted transition hover:bg-seed-cyan/[.07] hover:text-white; }
+    .side-link { @apply relative flex origin-left items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-seed-muted transition duration-200 hover:translate-x-1 hover:scale-[1.025] hover:bg-seed-cyan/[.09] hover:text-white; }
+    .side-link svg { @apply transition duration-200; }
+    .side-link:hover svg { @apply scale-110 text-seed-cyan; }
     .side-link-active { @apply bg-seed-lime/[.08] text-seed-lime hover:bg-seed-lime/[.1] hover:text-seed-lime; }
     .side-link-active::before { content: ''; @apply absolute -left-4 top-2 bottom-2 w-1 rounded-r-full bg-seed-lime; box-shadow: 0 0 12px #b8ff39; }
 
@@ -132,8 +135,51 @@
     .skeleton { @apply relative overflow-hidden rounded-lg bg-white/[.05]; }
     .skeleton::after { content: ''; @apply absolute inset-0 -translate-x-full animate-shimmer; background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .06), transparent); }
 
+    /* ---------- Carga de marca: una semilla que brota ---------- */
+    .system-loader { @apply pointer-events-none invisible fixed inset-0 z-[999] grid scale-[.99] place-items-center bg-seed-950 opacity-0 transition duration-300; animation: loader-reveal .22s ease-out .3s forwards; }
+    .system-loader--leaving { animation: none; @apply pointer-events-none invisible scale-[1.01] opacity-0; }
+    .system-loader__glow { @apply absolute h-72 w-72 rounded-full; background: radial-gradient(circle, rgba(184,255,57,.13), transparent 68%); animation: loader-glow 1.6s ease-in-out infinite; }
+    .system-loader__content { @apply relative flex min-w-64 flex-col items-center text-center; }
+    .system-loader__brand { @apply mt-4 text-xl font-black tracking-tight; }
+    .system-loader__brand span { @apply text-seed-lime; }
+    .system-loader__message { @apply mt-1.5 text-xs text-seed-muted; }
+    .system-loader__progress { @apply mt-5 h-1 w-44 overflow-hidden rounded-full bg-white/[.07]; }
+    .system-loader__progress i { @apply block h-full rounded-full; width: 45%; background: linear-gradient(90deg, #18e2c3, #b8ff39); animation: loader-progress 1.25s ease-in-out infinite; }
+    .seed-growth { @apply relative h-28 w-28; }
+    .seed-growth__soil { @apply absolute bottom-3 left-1/2 h-2 w-20 -translate-x-1/2 rounded-[50%] bg-seed-700; box-shadow: 0 0 22px rgba(24,226,195,.15); }
+    .seed-growth__seed { @apply absolute bottom-5 left-1/2 h-8 w-6 -translate-x-1/2 rounded-[65%_35%_62%_38%] border border-seed-gold/50; background: linear-gradient(145deg, #ffe378, #e89618 65%, #80510e); box-shadow: 0 0 24px rgba(255,200,61,.25); animation: seed-pulse 1.6s ease-in-out infinite; }
+    .seed-growth__stem { @apply absolute bottom-10 left-1/2 h-12 w-1 origin-bottom -translate-x-1/2 rounded-full; background: linear-gradient(#b8ff39, #18e2c3); animation: stem-grow 1.6s ease-in-out infinite; }
+    .seed-growth__leaf { @apply absolute bottom-[4.55rem] left-1/2 h-5 w-9 origin-bottom; background: linear-gradient(135deg, #b8ff39, #18e2c3); opacity: 0; animation: leaf-grow 1.6s ease-in-out infinite; }
+    .seed-growth__leaf--left { margin-left: -2rem; border-radius: 100% 0 100% 0; transform: rotate(18deg); }
+    .seed-growth__leaf--right { margin-left: -.15rem; border-radius: 0 100% 0 100%; transform: rotate(-18deg); animation-delay: .08s; }
+
     /* ---------- Contenido de texto largo ---------- */
     .prose-seed { @apply whitespace-pre-line leading-8 text-seed-muted; }
+}
+
+@keyframes seed-pulse {
+    0%, 18% { transform: translateX(-50%) rotate(9deg) scale(.78); }
+    42%, 100% { transform: translateX(-50%) rotate(0) scale(1); }
+}
+@keyframes loader-reveal {
+    to { visibility: visible; pointer-events: auto; opacity: 1; transform: scale(1); }
+}
+@keyframes stem-grow {
+    0%, 24% { transform: translateX(-50%) scaleY(0); opacity: 0; }
+    64%, 100% { transform: translateX(-50%) scaleY(1); opacity: 1; }
+}
+@keyframes leaf-grow {
+    0%, 48% { opacity: 0; scale: .15; }
+    76%, 100% { opacity: 1; scale: 1; }
+}
+@keyframes loader-progress {
+    0% { transform: translateX(-115%); }
+    55% { transform: translateX(85%); }
+    100% { transform: translateX(245%); }
+}
+@keyframes loader-glow {
+    0%, 100% { opacity: .55; transform: scale(.88); }
+    50% { opacity: 1; transform: scale(1.08); }
 }
 
 @layer utilities {

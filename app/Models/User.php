@@ -6,8 +6,11 @@ use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable implements MustVerifyEmail
@@ -34,6 +37,20 @@ class User extends Authenticatable implements MustVerifyEmail
         'google_id',
         'avatar',
     ];
+
+    protected static function booted(): void
+    {
+        static::deleting(function (User $user) {
+            if ($user->avatar && ! str_starts_with($user->avatar, 'http://') && ! str_starts_with($user->avatar, 'https://')) {
+                Storage::disk('public')->delete($user->avatar);
+            }
+
+            $conversationId = $user->chatConversation()->value('id');
+            if ($conversationId) {
+                Storage::disk('local')->deleteDirectory('chat/'.$conversationId);
+            }
+        });
+    }
 
     /**
      * The attributes that should be hidden for serialization.
@@ -82,5 +99,15 @@ class User extends Authenticatable implements MustVerifyEmail
     public function followedProjects(): BelongsToMany
     {
         return $this->belongsToMany(Project::class, 'project_follows')->withTimestamps();
+    }
+
+    public function chatConversation(): HasOne
+    {
+        return $this->hasOne(ChatConversation::class);
+    }
+
+    public function sentChatMessages(): HasMany
+    {
+        return $this->hasMany(ChatMessage::class, 'sender_id');
     }
 }

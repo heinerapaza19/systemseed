@@ -7,6 +7,7 @@ use App\Http\Requests\Api\V1\Admin\StoreProjectRequest;
 use App\Http\Requests\Api\V1\Admin\UpdateProjectRequest;
 use App\Http\Resources\Api\V1\ProjectResource;
 use App\Models\Project;
+use App\Services\PublicContentCache;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Arr;
@@ -31,6 +32,7 @@ class ProjectController extends Controller
             $validated = $request->validated();
             $project = Project::create(Arr::except($validated, 'technologies'));
             $project->technologies()->sync($validated['technologies'] ?? []);
+            PublicContentCache::forget();
 
             return $project;
         });
@@ -53,6 +55,7 @@ class ProjectController extends Controller
 
             if (array_key_exists('technologies', $validated)) {
                 $project->technologies()->sync($validated['technologies']);
+                PublicContentCache::forget();
             }
         });
 

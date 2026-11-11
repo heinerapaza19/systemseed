@@ -6,6 +6,11 @@
         ['Plantillas', $user->savedTemplates()->count(), 'layers', 'text-seed-gold', $isAdmin ? null : route('user.templates')],
         ['Siguiendo', $user->followedProjects()->count(), 'radar', 'text-seed-cyan', $isAdmin ? null : route('user.following')],
     ];
+    $avatarUrl = $user->avatar
+        ? (str_starts_with($user->avatar, 'http://') || str_starts_with($user->avatar, 'https://')
+            ? $user->avatar
+            : \Illuminate\Support\Facades\Storage::disk('public')->url($user->avatar))
+        : null;
 @endphp
 <x-layouts.dashboard :title="$isAdmin ? 'Configuración' : 'Mi perfil'">
 <div class="space-y-6">
@@ -19,8 +24,57 @@
     <section class="relative overflow-hidden rounded-3xl border border-seed-lime/20 bg-gradient-to-br from-seed-700 via-seed-800 to-seed-900 shadow-seed">
         <div class="pointer-events-none absolute inset-0 bg-grid opacity-50 mask-radial"></div>
         <div class="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-seed-cyan/10 blur-3xl"></div>
-        <div class="relative flex flex-col items-center gap-5 p-6 text-center sm:flex-row sm:p-8 sm:text-left">
-            <x-avatar size="xl" class="!h-24 !w-24 !text-3xl" />
+        <div class="relative flex flex-col items-center gap-5 p-6 text-center sm:flex-row sm:items-start sm:p-8 sm:text-left">
+            <form method="POST" action="{{ route('user.profile.update') }}" enctype="multipart/form-data"
+                  class="flex shrink-0 flex-col items-center gap-3"
+                  x-data="accountAvatar(@js($avatarUrl))" x-init="sending = false" @submit="sending = true">
+                @csrf
+                @method('PATCH')
+                <input type="hidden" name="name" value="{{ $user->name }}">
+                <div class="group relative h-24 w-24">
+                    <img x-show="preview" :src="preview" alt="Vista previa de tu foto" class="h-24 w-24 rounded-full object-cover ring-4 ring-seed-teal/25">
+                    <div x-show="!preview"><x-avatar size="xl" class="!h-24 !w-24 !text-3xl" /></div>
+                    <label for="avatar" class="absolute inset-0 grid cursor-pointer place-items-center rounded-full bg-seed-950/0 text-transparent transition duration-200 group-hover:bg-seed-950/75 group-hover:text-white" title="Cambiar foto">
+                        <span class="flex flex-col items-center gap-1 text-[10px] font-bold"><x-icon name="image" :size="20" /> Cambiar</span>
+                    </label>
+                    <input id="avatar" name="avatar" type="file" accept="image/jpeg,image/png,image/webp" class="sr-only" x-ref="avatarInput"
+                           @change="pickAvatar($event)">
+                </div>
+                <div class="flex gap-2">
+                    <button type="submit" class="btn btn-sm btn-primary" :disabled="sending || !$refs.avatarInput?.files?.length">
+                        <x-icon name="check" :size="13" /> <span x-text="sending ? 'Guardando…' : 'Guardar foto'"></span>
+                    </button>
+                    @if($user->avatar)
+                        <button type="submit" name="remove_avatar" value="1" class="btn btn-sm btn-danger" :disabled="sending"
+                                @click="$refs.avatarInput.value = ''; preview = null" aria-label="Eliminar foto" title="Eliminar foto">
+                            <x-icon name="trash" :size="13" />
+                        </button>
+                    @endif
+                </div>
+                @error('avatar')<p class="max-w-48 text-center text-xs text-seed-coral">{{ $message }}</p>@enderror
+                <p class="max-w-48 text-center text-[10px] leading-4 text-seed-muted">JPG, PNG o WEBP · máximo 4 MB</p>
+
+                <div x-cloak x-show="cropOpen" x-transition.opacity class="fixed inset-0 z-[300] grid place-items-center bg-seed-950/90 p-4 backdrop-blur-md" @keydown.escape.window="cropOpen && cancelCrop()">
+                    <section class="w-full max-w-md rounded-3xl border border-seed-teal/25 bg-seed-800 p-5 shadow-seed sm:p-6" @click.stop>
+                        <div class="flex items-start justify-between gap-4">
+                            <div><h3 class="text-lg font-extrabold">Ajustar foto</h3><p class="mt-1 text-xs text-seed-muted">Arrastra para encuadrar y usa el control de zoom.</p></div>
+                            <button type="button" class="btn-icon !h-9 !w-9" @click="cancelCrop()" aria-label="Cerrar editor"><x-icon name="x" :size="16" /></button>
+                        </div>
+                        <div class="mx-auto mt-6 aspect-square w-full max-w-[300px] overflow-hidden rounded-full border-4 border-seed-lime/30 bg-seed-950 shadow-glow touch-none">
+                            <canvas x-ref="cropCanvas" width="640" height="640" class="h-full w-full cursor-move select-none"
+                                    @pointerdown="startDrag($event)" @pointermove="drag($event)" @pointerup="stopDrag()" @pointercancel="stopDrag()"></canvas>
+                        </div>
+                        <label class="mt-6 block">
+                            <span class="form-label flex items-center justify-between"><span>Zoom</span><span class="font-mono text-seed-lime" x-text="`${Math.round(zoom * 100)}%`"></span></span>
+                            <input type="range" min="1" max="3" step="0.01" x-model.number="zoom" @input="drawCrop()" class="avatar-zoom w-full">
+                        </label>
+                        <div class="mt-6 grid grid-cols-2 gap-3">
+                            <button type="button" class="btn btn-md btn-secondary" @click="cancelCrop()">Cancelar</button>
+                            <button type="button" class="btn btn-md btn-primary" @click="applyCrop()"><x-icon name="check" :size="16" /> Usar foto</button>
+                        </div>
+                    </section>
+                </div>
+            </form>
             <div class="min-w-0 flex-1">
                 <h2 class="text-2xl font-black sm:text-3xl">{{ $user->name }}</h2>
                 <p class="mt-1 text-seed-muted">{{ $user->email }}</p>

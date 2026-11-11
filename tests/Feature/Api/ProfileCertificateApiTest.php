@@ -40,6 +40,11 @@ class ProfileCertificateApiTest extends TestCase
             'full_name' => 'Heiner Apaza',
             'professional_title' => 'Desarrollador Backend',
             'bio' => 'Perfil profesional de SystemSeed.',
+            'about_title' => 'Quién soy',
+            'journey_title' => 'Mi trayectoria profesional',
+            'journey_intro' => 'Experiencia, proyectos y formación.',
+            'experience_empty_text' => 'Muy pronto publicaré mi experiencia.',
+            'education_empty_text' => 'Muy pronto publicaré mi formación.',
             'location' => 'Perú',
             'github_url' => 'https://github.com/example',
             'instagram_url' => 'https://instagram.com/example',
@@ -47,6 +52,8 @@ class ProfileCertificateApiTest extends TestCase
         ])->assertOk()
             ->assertJsonPath('data.full_name', 'Heiner Apaza')
             ->assertJsonPath('data.professional_title', 'Desarrollador Backend')
+            ->assertJsonPath('data.about_title', 'Quién soy')
+            ->assertJsonPath('data.journey_title', 'Mi trayectoria profesional')
             ->assertJsonPath('data.instagram_url', 'https://instagram.com/example');
 
         $this->assertDatabaseCount('profiles', 1);

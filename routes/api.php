@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\V1\Admin\CertificateController as AdminCertificateController;
+use App\Http\Controllers\Api\V1\Admin\ChatController as AdminChatController;
 use App\Http\Controllers\Api\V1\Admin\ContactMessageController as AdminContactMessageController;
 use App\Http\Controllers\Api\V1\Admin\EducationController as AdminEducationController;
 use App\Http\Controllers\Api\V1\Admin\ExperienceController as AdminExperienceController;
@@ -18,10 +19,12 @@ use App\Http\Controllers\Api\V1\Auth\GoogleAuthController;
 use App\Http\Controllers\Api\V1\Auth\PasswordResetController;
 use App\Http\Controllers\Api\V1\CertificateController;
 use App\Http\Controllers\Api\V1\ChangePasswordController;
+use App\Http\Controllers\Api\V1\ChatAttachmentController;
 use App\Http\Controllers\Api\V1\ContactMessageController;
 use App\Http\Controllers\Api\V1\EducationController;
 use App\Http\Controllers\Api\V1\ExperienceController;
 use App\Http\Controllers\Api\V1\FavoriteController;
+use App\Http\Controllers\Api\V1\HomeController;
 use App\Http\Controllers\Api\V1\ProfileController;
 use App\Http\Controllers\Api\V1\ProjectAccessController;
 use App\Http\Controllers\Api\V1\ProjectController;
@@ -30,6 +33,7 @@ use App\Http\Controllers\Api\V1\ProjectUpdateController;
 use App\Http\Controllers\Api\V1\SavedTemplateController;
 use App\Http\Controllers\Api\V1\SkillController;
 use App\Http\Controllers\Api\V1\TechnologyController;
+use App\Http\Controllers\Api\V1\UserChatController;
 use App\Http\Controllers\Api\V1\UserDashboardController;
 use App\Http\Controllers\Api\V1\UserProjectUpdateController;
 use Illuminate\Http\Request;
@@ -45,6 +49,7 @@ Route::prefix('v1')->group(function () {
     });
 
     Route::get('/projects', [ProjectController::class, 'index']);
+    Route::get('/home', HomeController::class);
     Route::get('/projects/{project}/demo', [ProjectAccessController::class, 'demo']);
     Route::get('/projects/{project}/download', [ProjectAccessController::class, 'download']);
     Route::get('/projects/{project}/source-code', [ProjectAccessController::class, 'sourceCode']);
@@ -114,6 +119,9 @@ Route::prefix('v1')->group(function () {
         Route::get('/projects/{project}/updates/{update}', [AdminProjectUpdateController::class, 'show']);
         Route::patch('/projects/{project}/updates/{update}', [AdminProjectUpdateController::class, 'update']);
         Route::delete('/projects/{project}/updates/{update}', [AdminProjectUpdateController::class, 'destroy']);
+        Route::get('/chats', [AdminChatController::class, 'index']);
+        Route::get('/chats/{conversation}', [AdminChatController::class, 'show']);
+        Route::post('/chats/{conversation}/messages', [AdminChatController::class, 'store'])->middleware('throttle:30,1');
     });
 
     Route::prefix('user')->middleware(['auth:sanctum', 'active'])->group(function () {
@@ -129,5 +137,11 @@ Route::prefix('v1')->group(function () {
         Route::delete('/following/{project}', [ProjectFollowController::class, 'destroy']);
         Route::get('/project-updates', [UserProjectUpdateController::class, 'index']);
         Route::patch('/password', [ChangePasswordController::class, 'update']);
+        Route::get('/chat', [UserChatController::class, 'show']);
+        Route::post('/chat/messages', [UserChatController::class, 'store'])->middleware('throttle:30,1');
     });
+
+    Route::get('/chat/messages/{message}/attachment', ChatAttachmentController::class)
+        ->middleware(['auth:sanctum', 'active'])
+        ->name('api.chat.attachments.show');
 });

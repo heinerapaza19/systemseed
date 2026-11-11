@@ -1,16 +1,13 @@
+@props(['chatUnread' => 0, 'contactUnread' => 0, 'recentUpdates' => 0])
 @php
     $user = auth()->user();
     $isAdmin = $user->isAdmin();
-    $recentUpdates = $isAdmin ? 0 : \App\Models\ProjectUpdate::query()
-        ->whereIn('project_id', $user->followedProjects()->pluck('projects.id'))
-        ->where('visible', true)
-        ->where('published_at', '>=', now()->subDays(7))
-        ->count();
     $sections = $isAdmin
         ? [
             'General' => [
                 ['route' => 'admin.dashboard', 'label' => 'Dashboard', 'icon' => 'grid'],
-                ['route' => 'admin.messages', 'label' => 'Mensajes', 'icon' => 'mail', 'badge' => \App\Models\ContactMessage::where('is_read', false)->count()],
+                ['route' => 'admin.messages', 'label' => 'Mensajes', 'icon' => 'mail', 'badge' => $contactUnread],
+                ['route' => 'admin.chat', 'label' => 'Chat con usuarios', 'icon' => 'message-circle', 'badge' => $chatUnread, 'badge_event' => 'chat-unread-count'],
             ],
             'Contenido' => [
                 ['route' => 'admin.projects', 'label' => 'Proyectos', 'icon' => 'folder'],
@@ -34,6 +31,7 @@
             'Mi espacio' => [
                 ['route' => 'user.dashboard', 'label' => 'Inicio', 'icon' => 'grid'],
                 ['route' => 'user.explore', 'label' => 'Explorar proyectos', 'icon' => 'compass'],
+                ['route' => 'user.chat', 'label' => 'Chat con administración', 'icon' => 'message-circle', 'badge' => $chatUnread, 'badge_event' => 'chat-unread-count'],
             ],
             'Mi biblioteca' => [
                 ['route' => 'user.favorites', 'label' => 'Mis favoritos', 'icon' => 'heart'],
@@ -86,7 +84,7 @@
                             @endif
                             @if(array_key_exists('badge', $item))
                                 {{-- Contador en vivo: se actualiza con el evento unread-count desde la bandeja --}}
-                                <span x-data="{ n: {{ (int) $item['badge'] }} }" @unread-count.window="n = $event.detail" x-show="n > 0" x-text="n"
+                                <span x-data="{ n: {{ (int) $item['badge'] }} }" @{{ $item['badge_event'] ?? 'unread-count' }}.window="n = $event.detail" x-show="n > 0" x-text="n"
                                       class="ml-auto rounded-full bg-seed-gold px-2 py-0.5 font-mono text-[10px] font-extrabold text-seed-900" title="Sin leer">{{ $item['badge'] ?: '' }}</span>
                             @endif
                         </a>

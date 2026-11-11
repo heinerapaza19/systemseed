@@ -20,7 +20,7 @@ class DatabaseSeeder extends Seeder
                 'email' => 'heinerapazaapaza@gmail.com',
                 'role' => 'admin',
             ]
-        );;
+        );
 
         User::updateOrCreate([
             'email' => 'usuario@gmail.com',

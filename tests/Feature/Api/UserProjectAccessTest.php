@@ -232,7 +232,11 @@ class UserProjectAccessTest extends TestCase
             ->assertJsonPath('favorites_count', 1)
             ->assertJsonPath('saved_templates_count', 1)
             ->assertJsonPath('following_count', 1)
-            ->assertJsonCount(1, 'recent_updates');
+            ->assertJsonCount(1, 'recent_updates')
+            ->assertJsonPath('library.favorites.0', $project->id)
+            ->assertJsonPath('library.templates.0', $project->id)
+            ->assertJsonPath('library.following.0', $project->id)
+            ->assertJsonPath('projects.0.id', $project->id);
     }
 
     private function project(array $attributes = []): Project

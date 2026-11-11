@@ -7,7 +7,7 @@
   },
   "variable": [
     { "key": "base_url", "value": "http://127.0.0.1:8000", "type": "string" },
-    { "key": "admin_email", "value": "heinerapaza@gmail.com", "type": "string" },
+    { "key": "admin_email", "value": "heinerapazaapaza@gmail.com", "type": "string" },
     { "key": "admin_password", "value": "apaza", "type": "string" },
     { "key": "user_email", "value": "usuario@gmail.com", "type": "string" },
     { "key": "user_password", "value": "usuario", "type": "string" },
@@ -43,6 +43,9 @@
     { "key": "security_email", "value": "", "type": "string" },
     { "key": "password_reset_token", "value": "", "type": "string" },
     { "key": "verification_url", "value": "", "type": "string" },
+    { "key": "chat_conversation_id", "value": "", "type": "string" },
+    { "key": "chat_message_id", "value": "", "type": "string" },
+    { "key": "chat_file_path", "value": "", "type": "string" },
     { "key": "run_rate_limit_test", "value": "false", "type": "string" }
   ],
   "item": [
@@ -58,7 +61,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.collectionVariables.set('run_id', Date.now().toString());",
-                  "['admin_token','user_token','registered_token','technology_id','project_id','project_slug','duplicate_project_id','draft_project_id','draft_project_slug','image_id','managed_user_id','favorite_project_id','message_id','experience_id','education_id','skill_id','certificate_id','original_profile_json','public_demo_project_id','private_demo_project_id','template_project_id','project_update_id','security_user_id','security_token','security_email','password_reset_token','verification_url'].forEach(key => pm.collectionVariables.set(key, ''));"
+                  "['admin_token','user_token','registered_token','technology_id','project_id','project_slug','duplicate_project_id','draft_project_id','draft_project_slug','image_id','managed_user_id','favorite_project_id','message_id','experience_id','education_id','skill_id','certificate_id','original_profile_json','public_demo_project_id','private_demo_project_id','template_project_id','project_update_id','security_user_id','security_token','security_email','password_reset_token','verification_url','chat_conversation_id','chat_message_id'].forEach(key => pm.collectionVariables.set(key, ''));"
                 ]
               }
             },
@@ -183,6 +186,11 @@
     {
       "name": "02 - API pública",
       "item": [
+        {
+          "name": "Cargar portada optimizada",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Portada disponible en una solicitud', () => pm.response.to.have.status(200));", "const data = pm.response.json().data;", "pm.test('Incluye todos los módulos públicos', () => ['profile','projects','technologies','experiences','education','skills','certificates'].forEach(key => pm.expect(data).to.have.property(key)));"] } }],
+          "request": { "method": "GET", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{base_url}}/api/v1/home", "description": "Endpoint agregado para evitar siete solicitudes separadas al cargar la portada en el servidor de desarrollo." }
+        },
         {
           "name": "Listar tecnologías",
           "event": [{
@@ -858,7 +866,49 @@
       ]
     },
     {
-      "name": "19 - Limpieza y logout",
+      "name": "19 - Chat usuario y administrador",
+      "item": [
+        {
+          "name": "Usuario - Abrir conversación",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Conversación disponible', () => pm.response.to.have.status(200));", "const payload = pm.response.json().data;", "pm.collectionVariables.set('chat_conversation_id', payload.id);", "pm.test('La conversación pertenece al usuario', () => pm.expect(payload.user.email).to.eql(pm.collectionVariables.get('user_email')));"] } }],
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{user_token}}", "type": "string" }] }, "method": "GET", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{base_url}}/api/v1/user/chat", "description": "Crea la conversación privada del usuario si todavía no existe y devuelve sus últimos 100 mensajes." }
+        },
+        {
+          "name": "Usuario - Enviar mensaje",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Mensaje enviado', () => pm.response.to.have.status(201));", "const payload = pm.response.json().data;", "pm.collectionVariables.set('chat_message_id', payload.id);", "pm.test('Mensaje pertenece al usuario autenticado', () => pm.expect(payload.is_mine).to.eql(true));"] } }],
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{user_token}}", "type": "string" }] }, "method": "POST", "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"body\": \"Hola administración, este mensaje fue enviado desde Postman.\"\n}" }, "url": "{{base_url}}/api/v1/user/chat/messages" }
+        },
+        {
+          "name": "Administrador - Listar conversaciones",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Bandeja administrativa disponible', () => pm.response.to.have.status(200));", "pm.test('Respuesta paginada', () => { const json = pm.response.json(); pm.expect(json.data).to.be.an('array'); pm.expect(json.meta).to.be.an('object'); });"] } }],
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }] }, "method": "GET", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{base_url}}/api/v1/admin/chats?per_page=30" }
+        },
+        {
+          "name": "Administrador - Abrir conversación",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Conversación abierta', () => pm.response.to.have.status(200));", "pm.test('Incluye mensajes', () => pm.expect(pm.response.json().data.messages).to.be.an('array').and.not.empty);"] } }],
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }] }, "method": "GET", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{base_url}}/api/v1/admin/chats/{{chat_conversation_id}}" }
+        },
+        {
+          "name": "Administrador - Responder",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Respuesta enviada', () => pm.response.to.have.status(201));", "pm.test('Respuesta pertenece al administrador', () => pm.expect(pm.response.json().data.is_mine).to.eql(true));"] } }],
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }] }, "method": "POST", "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"body\": \"Hola, recibimos tu mensaje correctamente.\"\n}" }, "url": "{{base_url}}/api/v1/admin/chats/{{chat_conversation_id}}/messages" }
+        },
+        {
+          "name": "Usuario - Enviar foto o archivo (manual)",
+          "disabled": true,
+          "event": [{ "listen": "prerequest", "script": { "type": "text/javascript", "exec": ["if (!pm.collectionVariables.get('chat_file_path')) {", "    console.log('Adjunto omitido: seleccione un archivo local en Body > form-data o configure chat_file_path.');", "    pm.execution.skipRequest();", "}"] } }, { "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Archivo enviado', () => pm.response.to.have.status(201));", "const payload = pm.response.json().data;", "pm.collectionVariables.set('chat_message_id', payload.id);", "pm.test('Respuesta incluye adjunto privado', () => pm.expect(payload.attachment.url).to.be.a('string'));"] } }],
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{user_token}}", "type": "string" }] }, "method": "POST", "header": [{ "key": "Accept", "value": "application/json" }], "body": { "mode": "formdata", "formdata": [{ "key": "body", "value": "Archivo enviado desde Postman", "type": "text" }, { "key": "attachment", "type": "file", "src": "{{chat_file_path}}" }] }, "url": "{{base_url}}/api/v1/user/chat/messages", "description": "Habilite esta solicitud y seleccione un archivo local. Admite imágenes, PDF, documentos, hojas de cálculo, presentaciones, TXT, CSV, ZIP y RAR de hasta 10 MB." }
+        },
+        {
+          "name": "Descargar último adjunto del chat",
+          "disabled": true,
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Adjunto privado disponible', () => pm.response.to.have.status(200));"] } }],
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{user_token}}", "type": "string" }] }, "method": "GET", "url": "{{base_url}}/api/v1/chat/messages/{{chat_message_id}}/attachment", "description": "Habilite después de ejecutar la carga manual. El archivo solo puede abrirlo el usuario participante o un administrador." }
+        }
+      ]
+    },
+    {
+      "name": "20 - Limpieza y logout",
       "item": [
         {
           "name": "Eliminar proyecto draft",

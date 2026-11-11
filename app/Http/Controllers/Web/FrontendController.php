@@ -68,6 +68,13 @@ class FrontendController extends Controller
         return view('user.profile');
     }
 
+    public function chat(): View
+    {
+        abort_if(auth()->user()->isAdmin(), 403);
+
+        return view('user.chat');
+    }
+
     public function admin(): View
     {
         return view('admin.dashboard');

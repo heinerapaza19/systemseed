@@ -128,14 +128,15 @@ export default function registerUser(Alpine) {
         error: '',
 
         async init() {
-            const [dashboard, projects] = await Promise.allSettled([
-                api.get('/user/dashboard').then(res => res.data),
-                fetchAll('/projects', { per_page: 50 }, 2),
-                this.loadLibrary(),
-            ]);
-            if (dashboard.status === 'rejected') this.error = errorMessage(dashboard.reason);
-            this.dashboard = dashboard.status === 'fulfilled' ? dashboard.value : null;
-            this.projects = projects.status === 'fulfilled' ? projects.value : [];
+            try {
+                this.dashboard = (await api.get('/user/dashboard')).data;
+                this.projects = this.dashboard.projects ?? [];
+                this.lib.favorites = this.dashboard.library?.favorites ?? [];
+                this.lib.templates = this.dashboard.library?.templates ?? [];
+                this.lib.following = this.dashboard.library?.following ?? [];
+            } catch (error) {
+                this.error = errorMessage(error);
+            }
             this.loading = false;
         },
 
@@ -387,6 +388,102 @@ export default function registerUser(Alpine) {
             } finally {
                 this.state.loading = false;
             }
+        },
+    }));
+
+    /* ------------------------------------------------------------------ */
+    /* Editor de avatar: recorte, posición y zoom antes de subir           */
+    /* ------------------------------------------------------------------ */
+    Alpine.data('accountAvatar', initialUrl => ({
+        sending: false,
+        preview: initialUrl || null,
+        originalPreview: initialUrl || null,
+        cropOpen: false,
+        image: null,
+        zoom: 1,
+        offsetX: 0,
+        offsetY: 0,
+        dragging: false,
+        pointerX: 0,
+        pointerY: 0,
+
+        pickAvatar(event) {
+            const file = event.target.files?.[0];
+            if (!file) return;
+            if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 4 * 1024 * 1024) {
+                toast('Selecciona una imagen JPG, PNG o WEBP de hasta 4 MB.', 'error');
+                event.target.value = '';
+                return;
+            }
+
+            const image = new Image();
+            image.onload = () => {
+                this.image = image;
+                this.zoom = 1;
+                this.offsetX = 0;
+                this.offsetY = 0;
+                this.cropOpen = true;
+                this.$nextTick(() => this.drawCrop());
+            };
+            image.src = URL.createObjectURL(file);
+        },
+
+        drawCrop() {
+            const canvas = this.$refs.cropCanvas;
+            if (!canvas || !this.image) return;
+            const context = canvas.getContext('2d');
+            const size = canvas.width;
+            const scale = Math.max(size / this.image.width, size / this.image.height) * Number(this.zoom);
+            const width = this.image.width * scale;
+            const height = this.image.height * scale;
+            const maxX = Math.max(0, (width - size) / 2);
+            const maxY = Math.max(0, (height - size) / 2);
+            this.offsetX = Math.max(-maxX, Math.min(maxX, this.offsetX));
+            this.offsetY = Math.max(-maxY, Math.min(maxY, this.offsetY));
+            context.clearRect(0, 0, size, size);
+            context.drawImage(this.image, (size - width) / 2 + this.offsetX, (size - height) / 2 + this.offsetY, width, height);
+        },
+
+        startDrag(event) {
+            this.dragging = true;
+            this.pointerX = event.clientX;
+            this.pointerY = event.clientY;
+            event.currentTarget.setPointerCapture?.(event.pointerId);
+        },
+
+        drag(event) {
+            if (!this.dragging) return;
+            const canvas = this.$refs.cropCanvas;
+            const factor = canvas.width / canvas.getBoundingClientRect().width;
+            this.offsetX += (event.clientX - this.pointerX) * factor;
+            this.offsetY += (event.clientY - this.pointerY) * factor;
+            this.pointerX = event.clientX;
+            this.pointerY = event.clientY;
+            this.drawCrop();
+        },
+
+        stopDrag() {
+            this.dragging = false;
+        },
+
+        applyCrop() {
+            const canvas = this.$refs.cropCanvas;
+            canvas.toBlob(blob => {
+                if (!blob) return;
+                const file = new File([blob], 'avatar.webp', { type: 'image/webp' });
+                const transfer = new DataTransfer();
+                transfer.items.add(file);
+                this.$refs.avatarInput.files = transfer.files;
+                this.preview = URL.createObjectURL(blob);
+                this.cropOpen = false;
+            }, 'image/webp', .88);
+        },
+
+        cancelCrop() {
+            this.cropOpen = false;
+            this.image = null;
+            this.preview = this.originalPreview;
+            this.$refs.avatarInput.value = '';
         },
     }));
 }

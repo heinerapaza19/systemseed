@@ -5,6 +5,7 @@
     @include('partials.head', ['title' => $title, 'description' => $description, 'image' => $image])
 </head>
 <body x-data class="min-h-screen">
+    <x-seed-loader />
     <a href="#contenido" class="sr-only z-[200] rounded-lg bg-seed-lime px-4 py-2 font-bold text-seed-900 focus:not-sr-only focus:fixed focus:left-4 focus:top-4">Saltar al contenido</a>
     <x-navbar :transparent="$transparentNav" />
 

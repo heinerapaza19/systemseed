@@ -2,6 +2,15 @@
 
 namespace App\Providers;
 
+use App\Models\Certificate;
+use App\Models\Education;
+use App\Models\Experience;
+use App\Models\Profile;
+use App\Models\Project;
+use App\Models\ProjectImage;
+use App\Models\Skill;
+use App\Models\Technology;
+use App\Services\PublicContentCache;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -40,6 +49,11 @@ class AppServiceProvider extends ServiceProvider
 
         RateLimiter::for('contact', fn (Request $request) => Limit::perMinute(10)
             ->by($request->ip()));
+
+        foreach ([Profile::class, Project::class, ProjectImage::class, Technology::class, Experience::class, Education::class, Skill::class, Certificate::class] as $model) {
+            $model::saved(fn () => PublicContentCache::forget());
+            $model::deleted(fn () => PublicContentCache::forget());
+        }
     }
 
     /**

@@ -47,6 +47,7 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::view('/explorar', 'user.explore')->name('explore');
         Route::view('/seguridad', 'user.security')->name('security');
         Route::view('/contacto', 'user.contact')->name('contact');
+        Route::get('/chat', [FrontendController::class, 'chat'])->name('chat');
     });
 });
 
@@ -66,4 +67,5 @@ Route::middleware(['auth', 'active', 'admin'])->prefix('admin')->name('admin.')-
     Route::view('/educacion', 'admin.education')->name('education');
     Route::view('/skills', 'admin.skills')->name('skills');
     Route::view('/usuarios', 'admin.users')->name('users');
+    Route::view('/chat', 'admin.chat')->name('chat');
 });

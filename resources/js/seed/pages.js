@@ -57,24 +57,20 @@ export default function registerPages(Alpine) {
         contactState: { loading: false, sent: false, error: '', errors: {}, waUrl: null },
 
         async init() {
-            const r = await settle({
-                profile: api.get('/profile').then(res => res.data.data),
-                projects: fetchAll('/projects', { per_page: 100 }, 3),
-                technologies: api.get('/technologies').then(unwrap),
-                experiences: api.get('/experiences').then(unwrap),
-                education: api.get('/education').then(unwrap),
-                skills: api.get('/skills').then(unwrap),
-                certificates: api.get('/certificates').then(unwrap),
-            });
-            this.profile = value(r.profile, {}) ?? {};
-            this.projects = value(r.projects);
-            this.technologies = value(r.technologies);
-            this.experiences = value(r.experiences);
-            this.education = value(r.education);
-            this.skills = value(r.skills);
-            this.certificates = value(r.certificates);
-            this.failed = Object.values(r).every(result => result.status === 'rejected');
-            this.loading = false;
+            try {
+                const payload = unwrap(await api.get('/home'));
+                this.profile = payload.profile ?? {};
+                this.projects = payload.projects ?? [];
+                this.technologies = payload.technologies ?? [];
+                this.experiences = payload.experiences ?? [];
+                this.education = payload.education ?? [];
+                this.skills = payload.skills ?? [];
+                this.certificates = payload.certificates ?? [];
+            } catch {
+                this.failed = true;
+            } finally {
+                this.loading = false;
+            }
         },
 
         get featured() {

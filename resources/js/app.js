@@ -4,8 +4,21 @@ import * as seed from './seed/helpers';
 import registerPages from './seed/pages';
 import registerAdmin from './seed/admin';
 import registerUser from './seed/user';
+import registerChat from './seed/chat';
 
 window.Alpine = Alpine;
+
+/* La semilla solo llega a mostrarse cuando la carga supera el umbral definido en CSS. */
+const dismissSeedLoader = () => {
+    const loader = document.getElementById('system-seed-loader');
+    if (!loader) return;
+
+    loader.classList.add('system-loader--leaving');
+    window.setTimeout(() => loader.remove(), 300);
+};
+
+if (document.readyState === 'complete') dismissSeedLoader();
+else window.addEventListener('load', dismissSeedLoader, { once: true });
 
 /* Helpers disponibles en las vistas como $seed.coverStyle(project), etc. */
 Alpine.magic('seed', () => seed);
@@ -43,6 +56,7 @@ Alpine.store('modal', {
 registerPages(Alpine);
 registerAdmin(Alpine);
 registerUser(Alpine);
+registerChat(Alpine);
 
 /* Toast desde mensajes flash del servidor */
 document.addEventListener('alpine:initialized', () => {

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Web\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Services\PublicImageService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -17,7 +18,7 @@ class UploadController extends Controller
 {
     public const FOLDERS = ['technologies', 'skills', 'projects', 'gallery'];
 
-    public function store(Request $request): JsonResponse
+    public function store(Request $request, PublicImageService $images): JsonResponse
     {
         $validated = $request->validate([
             'image' => ['required', 'file', 'image', 'mimes:jpg,jpeg,png,webp,gif', 'max:4096'],
@@ -28,7 +29,7 @@ class UploadController extends Controller
             'image.max' => 'La imagen no debe pesar más de 4 MB.',
         ]);
 
-        $path = $request->file('image')->store('uploads/'.$validated['folder'], 'public');
+        $path = $images->storeWebp($request->file('image'), 'uploads/'.$validated['folder']);
 
         abort_unless($path, Response::HTTP_INTERNAL_SERVER_ERROR, 'No se pudo guardar la imagen.');
 

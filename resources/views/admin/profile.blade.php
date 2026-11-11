@@ -19,6 +19,19 @@
                 <x-admin.field name="location" label="Ubicación" icon="map-pin" placeholder="Ej.: Juliaca, Perú" :full="true" />
                 <x-admin.field name="bio" label="Bio" type="textarea" :rows="5" :full="true" placeholder="Cuéntale a los visitantes quién eres y qué haces…" />
 
+                <x-admin.section-title icon="monitor" title="Contenido del inicio" description="Personaliza los textos principales de «Sobre mí» y de tu trayectoria." />
+                <x-admin.field name="hero_eyebrow" label="Etiqueta de portada" placeholder="Portafolio · proyectos · plantillas · recursos" :full="true" />
+                <x-admin.field name="hero_title" label="Título principal" placeholder="Ideas que germinan en" />
+                <x-admin.field name="hero_highlight" label="Texto destacado" placeholder="software real." />
+                <x-admin.field name="hero_description" label="Descripción de portada" type="textarea" :rows="3" :full="true" placeholder="Diseño y construyo plataformas web…" />
+                <x-admin.field name="about_title" label="Título de Sobre mí" placeholder="Sobre mí" />
+                <x-admin.field name="journey_title" label="Título de trayectoria" placeholder="Experiencia y educación" />
+                <x-admin.field name="journey_intro" label="Introducción de trayectoria" type="textarea" :rows="3" :full="true" placeholder="El camino recorrido: proyectos, equipos y formación." />
+                <x-admin.field name="experience_empty_text" label="Mensaje sin experiencia" type="textarea" :rows="2" placeholder="La experiencia se publicará próximamente." />
+                <x-admin.field name="education_empty_text" label="Mensaje sin educación" type="textarea" :rows="2" placeholder="La formación se publicará próximamente." />
+                <x-admin.field name="contact_title" label="Título de contacto" placeholder="¿Tienes un proyecto en mente?" :full="true" />
+                <x-admin.field name="contact_intro" label="Introducción de contacto" type="textarea" :rows="2" :full="true" placeholder="Cuéntame qué quieres construir…" />
+
                 <x-admin.section-title icon="globe" title="Redes y enlaces" description="Deja vacío lo que no quieras mostrar." />
                 <x-admin.field name="github_url" label="GitHub" type="url" icon="github" placeholder="https://github.com/usuario" />
                 <x-admin.field name="linkedin_url" label="LinkedIn" type="url" icon="linkedin" placeholder="https://linkedin.com/in/usuario" />

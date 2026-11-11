@@ -18,8 +18,22 @@
         },
       }"
       @keydown.escape.window="mobileNav = false">
+    <x-seed-loader />
+    @php
+        $dashboardUser = auth()->user();
+        $dashboardIsAdmin = $dashboardUser->isAdmin();
+        $chatUnread = $dashboardIsAdmin
+            ? \App\Models\ChatConversation::sum('admin_unread_count')
+            : (int) optional($dashboardUser->chatConversation)->user_unread_count;
+        $contactUnread = $dashboardIsAdmin ? \App\Models\ContactMessage::where('is_read', false)->count() : 0;
+        $recentUpdates = $dashboardIsAdmin ? 0 : \App\Models\ProjectUpdate::query()
+            ->whereIn('project_id', $dashboardUser->followedProjects()->pluck('projects.id'))
+            ->where('visible', true)
+            ->where('published_at', '>=', now()->subDays(7))
+            ->count();
+    @endphp
     <div class="flex min-h-screen">
-        <x-sidebar />
+        <x-sidebar :chat-unread="$chatUnread" :contact-unread="$contactUnread" :recent-updates="$recentUpdates" />
 
         <div class="flex min-w-0 flex-1 flex-col">
             <header class="sticky top-0 z-30 flex h-[72px] shrink-0 items-center gap-4 border-b border-seed-lime/10 bg-seed-900/85 px-4 backdrop-blur-xl sm:px-6 lg:px-8">
@@ -32,17 +46,19 @@
                 </div>
                 <div class="ml-auto flex items-center gap-2 sm:gap-3">
                     <a href="{{ route('home') }}" class="btn btn-md btn-ghost hidden md:inline-flex"><x-icon name="globe" :size="16" /> Ver portafolio</a>
+                    <a href="{{ auth()->user()->isAdmin() ? route('admin.chat') : route('user.chat') }}" class="btn-icon relative" aria-label="Chat" title="Chat">
+                        <x-icon name="message-circle" :size="18" />
+                        <span x-data="{ n: {{ $chatUnread }} }" @chat-unread-count.window="n = $event.detail" x-show="n > 0" x-text="n" class="absolute -right-1 -top-1 grid h-5 min-w-[20px] place-items-center rounded-full bg-seed-cyan px-1 font-mono text-[10px] font-extrabold text-seed-900">{{ $chatUnread ?: '' }}</span>
+                    </a>
                     @if(auth()->user()->isAdmin())
                         <a href="{{ route('admin.messages') }}" class="btn-icon relative" aria-label="Mensajes" title="Mensajes">
                             <x-icon name="mail" :size="18" />
-                            @php($unread = \App\Models\ContactMessage::where('is_read', false)->count())
-                            <span x-data="{ n: {{ $unread }} }" @unread-count.window="n = $event.detail" x-show="n > 0" x-text="n" class="absolute -right-1 -top-1 grid h-5 min-w-[20px] place-items-center rounded-full bg-seed-gold px-1 font-mono text-[10px] font-extrabold text-seed-900">{{ $unread ?: '' }}</span>
+                            <span x-data="{ n: {{ $contactUnread }} }" @unread-count.window="n = $event.detail" x-show="n > 0" x-text="n" class="absolute -right-1 -top-1 grid h-5 min-w-[20px] place-items-center rounded-full bg-seed-gold px-1 font-mono text-[10px] font-extrabold text-seed-900">{{ $contactUnread ?: '' }}</span>
                         </a>
                     @else
-                        @php($recent = \App\Models\ProjectUpdate::query()->whereIn('project_id', auth()->user()->followedProjects()->pluck('projects.id'))->where('visible', true)->where('published_at', '>=', now()->subDays(7))->count())
-                        <a href="{{ route('user.updates') }}" class="btn-icon relative" aria-label="Novedades" title="{{ $recent ? $recent.' novedades esta semana' : 'Novedades' }}">
+                        <a href="{{ route('user.updates') }}" class="btn-icon relative" aria-label="Novedades" title="{{ $recentUpdates ? $recentUpdates.' novedades esta semana' : 'Novedades' }}">
                             <x-icon name="bell" :size="18" />
-                            @if($recent)<span class="absolute right-2 top-2 h-2 w-2 rounded-full bg-seed-cyan shadow-glow-cyan"></span>@endif
+                            @if($recentUpdates)<span class="absolute right-2 top-2 h-2 w-2 rounded-full bg-seed-cyan shadow-glow-cyan"></span>@endif
                         </a>
                     @endif
                     {{-- Menú de sesión --}}

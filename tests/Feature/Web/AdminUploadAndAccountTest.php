@@ -23,6 +23,7 @@ class AdminUploadAndAccountTest extends TestCase
         ]);
 
         $response->assertCreated()->assertJsonPath('data.url', fn ($url) => str_starts_with($url, '/storage/uploads/technologies/'));
+        $this->assertStringEndsWith('.webp', $response->json('data.path'));
         Storage::disk('public')->assertExists($response->json('data.path'));
     }
 
@@ -80,5 +81,49 @@ class AdminUploadAndAccountTest extends TestCase
         $this->actingAs($user)->from('/mi-cuenta/perfil')
             ->patch('/mi-cuenta/perfil', ['name' => ''])
             ->assertSessionHasErrors('name');
+    }
+
+    public function test_user_can_upload_replace_and_remove_own_avatar(): void
+    {
+        Storage::fake('public');
+        $user = User::factory()->create(['name' => 'Usuario', 'role' => 'user', 'is_active' => true]);
+
+        $this->actingAs($user)->patch('/mi-cuenta/perfil', [
+            'name' => $user->name,
+            'avatar' => UploadedFile::fake()->image('perfil.jpg', 400, 400),
+        ])->assertSessionHasNoErrors()->assertSessionHas('success');
+
+        $firstAvatar = $user->refresh()->avatar;
+        $this->assertStringEndsWith('.webp', $firstAvatar);
+        Storage::disk('public')->assertExists($firstAvatar);
+
+        $this->actingAs($user)->patch('/mi-cuenta/perfil', [
+            'name' => $user->name,
+            'avatar' => UploadedFile::fake()->image('perfil-nuevo.png', 500, 500),
+        ])->assertSessionHasNoErrors();
+
+        $secondAvatar = $user->refresh()->avatar;
+        $this->assertNotSame($firstAvatar, $secondAvatar);
+        Storage::disk('public')->assertMissing($firstAvatar);
+        Storage::disk('public')->assertExists($secondAvatar);
+
+        $this->actingAs($user)->patch('/mi-cuenta/perfil', [
+            'name' => $user->name,
+            'remove_avatar' => '1',
+        ])->assertSessionHasNoErrors();
+
+        $this->assertNull($user->refresh()->avatar);
+        Storage::disk('public')->assertMissing($secondAvatar);
+    }
+
+    public function test_avatar_rejects_unsupported_files(): void
+    {
+        Storage::fake('public');
+        $user = User::factory()->create(['role' => 'user', 'is_active' => true]);
+
+        $this->actingAs($user)->patch('/mi-cuenta/perfil', [
+            'name' => $user->name,
+            'avatar' => UploadedFile::fake()->create('avatar.svg', 10, 'image/svg+xml'),
+        ])->assertSessionHasErrors('avatar');
     }
 }
